@@ -1,4 +1,4 @@
-package nio;
+package NioComponent.nio;
 
 import java.util.Collection;
 import java.util.HashMap;
