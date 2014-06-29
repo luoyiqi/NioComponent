@@ -72,7 +72,7 @@ public class NioTcpServer extends ANioServer<ServerSocketChannel> implements INi
             serverSocketChannel.configureBlocking(false);
 
             mSelector.wakeup();
-            SelectionKey selectionKey = serverSocketChannel.register(mSelector, SelectionKey.OP_ACCEPT);
+            SelectionKey selectionKey = serverSocketChannel.register(mSelector, SelectionKey.OP_ACCEPT, this);
 
 
             String key = serverSocketChannel.socket().getLocalPort()+"";
