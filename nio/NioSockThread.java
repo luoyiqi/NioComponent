@@ -75,8 +75,9 @@ public class NioSockThread extends Thread {
 
                         ServerSocketChannel serverSocketChannel = (ServerSocketChannel) key.channel();
                         SocketChannel clientChannel = serverSocketChannel.accept();
+                        INioSockEventHandler handler = (INioSockEventHandler)key.attachment();
 
-                        if (clientChannel != null) {
+                        if (clientChannel != null && handler != null) {
 
                             nioSockEntity = mPool.obtain();
                             if (nioSockEntity != null) {
@@ -87,17 +88,9 @@ public class NioSockThread extends Thread {
                                 nioSockEntity.decodeSocketAddress(clientChannel);
 
                                 clientChannel.configureBlocking(false);
-                                clientChannel.register(mSelector, SelectionKey.OP_READ);
-                                INioSockEventHandler handler = (INioSockEventHandler)key.attachment();
-                                if (handler != null)
-                                {
-                                    handler.addClientMap(nioSockEntity);
-                                }
-                                else
-                                {
-                                    mPool.recovery(nioSockEntity);
-                                }
+                                clientChannel.register(mSelector, SelectionKey.OP_READ, handler);
 
+                                handler.addClientMap(nioSockEntity);
                             } else {
                                 clientChannel.close();// pool empty
                             }
@@ -107,8 +100,9 @@ public class NioSockThread extends Thread {
                     }else if (key.isConnectable())
                     {
                         SocketChannel channel = (SocketChannel)key.channel();
+                        INioSockEventHandler handler = (INioSockEventHandler)key.attachment();
 
-                        if (channel != null)
+                        if (channel != null && handler != null)
                         {
                             nioSockEntity = mPool.obtain();
                             if (nioSockEntity != null)
@@ -116,16 +110,9 @@ public class NioSockThread extends Thread {
                                 nioSockEntity.channel = channel;
                                 nioSockEntity.decodeSocketAddress(channel);
 
-                                channel.register(mSelector, SelectionKey.OP_READ);
-                                INioSockEventHandler handler = (INioSockEventHandler)key.attachment();
-                                if (handler != null)
-                                {
-                                    handler.addClientMap(nioSockEntity);
-                                }
-                                else
-                                {
-                                    mPool.recovery(nioSockEntity);
-                                }
+                                channel.register(mSelector, SelectionKey.OP_READ, handler);
+
+                                handler.addClientMap(nioSockEntity);
                             }
                             else
                             {
@@ -156,6 +143,7 @@ public class NioSockThread extends Thread {
                                 }
                                 else
                                 {
+                                    System.out.println("null........");
                                     mPool.recovery(nioSockEntity);
                                 }
 
