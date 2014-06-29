@@ -15,7 +15,7 @@ public abstract class ANioServer<T> {
     protected NioSockMap<SocketChannel> mClientMap;
     protected NioSockEntityPool mPool;
     protected Queue<NioSockEntity> mReceiveQueue;
-    protected ISockNotifyEventHandler notifyEvent = null;
+    protected INioSockNotifyEventHandler notifyEvent = null;
     protected Selector mSelector;
 
     public abstract void init();
@@ -26,7 +26,7 @@ public abstract class ANioServer<T> {
     public abstract void removeAllClient();
     public abstract ArrayList<String> getClientList();
     public abstract void onDestroy();
-    public void addNotifyHandler(ISockNotifyEventHandler eventHandler)
+    public void addNotifyHandler(INioSockNotifyEventHandler eventHandler)
     {
         notifyEvent = eventHandler;
     }

@@ -15,7 +15,7 @@ import java.util.LinkedList;
  * Created by charlown on 2014/6/27.
  *
  */
-public class NioTcpServer extends ANioServer<ServerSocketChannel> implements ISockEventHandler{
+public class NioTcpServer extends ANioServer<ServerSocketChannel> implements INioSockEventHandler {
 
     public NioTcpServer()
     {

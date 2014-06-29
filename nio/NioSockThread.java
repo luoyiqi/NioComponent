@@ -89,7 +89,7 @@ public class NioSockThread extends Thread {
                                 clientChannel.configureBlocking(false);
                                 clientChannel.register(mSelector, SelectionKey.OP_READ);
                                 if (nioSockEntity.handle != null) {
-                                    ((ISockEventHandler) nioSockEntity.handle).addClientMap(nioSockEntity);
+                                    ((INioSockEventHandler) nioSockEntity.handle).addClientMap(nioSockEntity);
                                 }
 
                             } else {
@@ -115,7 +115,7 @@ public class NioSockThread extends Thread {
                                 nioSockEntity.dataBuffer.put(mBuffer);
                                 nioSockEntity.channel = channel;
                                 if (nioSockEntity.handle != null) {
-                                    ((ISockEventHandler) (nioSockEntity.handle)).addReceiveBufferQueue(nioSockEntity);
+                                    ((INioSockEventHandler) (nioSockEntity.handle)).addReceiveBufferQueue(nioSockEntity);
                                 }
 
                             } else if (rs == 0) {
@@ -124,7 +124,7 @@ public class NioSockThread extends Thread {
                             } else {
                                 //remote socket close.
                                 if (nioSockEntity.handle != null) {
-                                    ((ISockEventHandler) (nioSockEntity.handle)).removeClient(nioSockEntity.bindPort, nioSockEntity.host, nioSockEntity.port);
+                                    ((INioSockEventHandler) (nioSockEntity.handle)).removeClient(nioSockEntity.bindPort, nioSockEntity.host, nioSockEntity.port);
                                 }
                                 mPool.recovery(nioSockEntity);
                             }

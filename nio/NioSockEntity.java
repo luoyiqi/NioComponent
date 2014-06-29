@@ -23,7 +23,7 @@ public class NioSockEntity {
 
     public ByteBuffer dataBuffer;
 
-
+    public int step;
     public Object handle;
 
 

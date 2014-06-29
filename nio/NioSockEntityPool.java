@@ -17,7 +17,7 @@ public class NioSockEntityPool {
             m_pool.offer(new NioSockEntity());
         }
     }
-    public NioSockEntityPool(int capacity, ISockEventHandler sockEventHandler){
+    public NioSockEntityPool(int capacity, INioSockEventHandler sockEventHandler){
         m_pool = new LinkedList<NioSockEntity>();
 
         for (int i = 0 ; i < capacity; i++)
@@ -38,7 +38,7 @@ public class NioSockEntityPool {
         }
     }
 
-    public NioSockEntityPool(int capacity, int bufferSize, ISockEventHandler sockEventHandler)
+    public NioSockEntityPool(int capacity, int bufferSize, INioSockEventHandler sockEventHandler)
     {
         m_pool = new LinkedList<NioSockEntity>();
 
