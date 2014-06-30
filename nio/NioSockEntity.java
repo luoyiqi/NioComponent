@@ -2,7 +2,9 @@ package NioComponent.nio;
 
 
 import java.io.ByteArrayOutputStream;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
@@ -27,6 +29,17 @@ public class NioSockEntity {
     public Object handle;
 
 
+
+
+
+
+    public interface INioSockEventHandler {
+        public void stillbirthSocket(NioSockEntity entity);
+        public void birthSocket(NioSockEntity entity);
+        public void deadSocket(NioSockEntity entity);
+        public void birthBuffer(NioSockEntity entity);
+    }
+
     public NioSockEntity()
     {
 
@@ -46,6 +59,22 @@ public class NioSockEntity {
 
         bindPort = -1;
         host = "";
+        handle = null;
+
+        dataBuffer.clear();
+
+    }
+
+    public void reset(Object handler)
+    {
+        channelType = -1;
+        channel = null;
+        channelTcpServer  = null;
+
+        bindPort = -1;
+        host = "";
+
+        handle = handler;
 
         dataBuffer.clear();
 
@@ -54,9 +83,12 @@ public class NioSockEntity {
     public void decodeSocketAddress(SocketChannel channel)
     {
         InetSocketAddress address = (InetSocketAddress)channel.socket().getRemoteSocketAddress();
-        host = address.getAddress().getHostAddress();
-        bindPort = channel.socket().getLocalPort();
-        port = address.getPort();
+        if (address != null) {
+            host = address.getAddress().getHostAddress();
+            //notify:  if as client  'bindPort' is allocate local port, 'port' is connect remote port.
+            bindPort = channel.socket().getLocalPort();
+            port = address.getPort();
+        }
     }
     public void decodeSocketAddress(ServerSocketChannel channel)
     {

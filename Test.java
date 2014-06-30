@@ -29,16 +29,26 @@ public class Test {
                 System.out.println("receive buffer, bindPort, ip, port = " + bindPort + ", "+ ip +", " + port);
 
             }
+
+            @Override
+            public void notifyRunningMessage(int type) {
+
+            }
         };
 
 
         NioSocketProvider nioSocketProvider = new NioSocketProvider();
-        nioSocketProvider.initServer(NioTypes.TYPE_TCP_SERVER);
-        nioSocketProvider.addServerNotifyListener(notifyEventHandler);
+
+        nioSocketProvider.init();
+        nioSocketProvider.addNotifyListener(notifyEventHandler);
+
 
         boolean isSuc;
-        isSuc = nioSocketProvider.createServer(NioTypes.TYPE_TCP_SERVER, 10086);
+        isSuc = nioSocketProvider.createServer(NioTypes.TYPE_TCP_SERVER, 10087);
         System.out.println(isSuc);
+        isSuc = nioSocketProvider.createClient("192.168.3.8", 10086);
+        System.out.println(isSuc);
+
 
     }
 }

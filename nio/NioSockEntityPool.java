@@ -8,6 +8,7 @@ import java.util.Queue;
  */
 public class NioSockEntityPool {
     private Queue<NioSockEntity> m_pool;
+    private Object back_handler;
 
     public NioSockEntityPool(int capacity){
         m_pool = new LinkedList<NioSockEntity>();
@@ -17,15 +18,17 @@ public class NioSockEntityPool {
             m_pool.offer(new NioSockEntity());
         }
     }
-    public NioSockEntityPool(int capacity, INioSockEventHandler sockEventHandler){
+    public NioSockEntityPool(int capacity, Object handler){
         m_pool = new LinkedList<NioSockEntity>();
 
         for (int i = 0 ; i < capacity; i++)
         {
             NioSockEntity arg = new NioSockEntity();
-            arg.handle = sockEventHandler;
+            arg.handle = handler;
             m_pool.offer(arg);
         }
+        back_handler = handler;
+
     }
 
     public NioSockEntityPool(int capacity, int bufferSize)
@@ -38,16 +41,18 @@ public class NioSockEntityPool {
         }
     }
 
-    public NioSockEntityPool(int capacity, int bufferSize, INioSockEventHandler sockEventHandler)
+    public NioSockEntityPool(int capacity, int bufferSize, Object handler)
     {
         m_pool = new LinkedList<NioSockEntity>();
 
         for (int i = 0 ; i < capacity; i++)
         {
             NioSockEntity arg = new NioSockEntity(bufferSize);
-            arg.handle = sockEventHandler;
+            arg.handle = handler;
             m_pool.offer(arg);
         }
+
+        back_handler = handler;
     }
 
     public NioSockEntity obtain()
@@ -62,7 +67,7 @@ public class NioSockEntityPool {
 
     public void recovery(NioSockEntity arg)
     {
-        arg.reset();
+        arg.reset(back_handler);
         m_pool.offer(arg);
     }
 

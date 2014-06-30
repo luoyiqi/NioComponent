@@ -11,67 +11,61 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class NioSocketProvider {
 
-
-    private final Lock objLock = new ReentrantLock();
-
-    private ANioServer<ServerSocketChannel> mTcpServer;
+    private NioSockController controller;
 
 
-    private INioSockNotifyEventHandler serverNotifyEvent;
-    private INioSockNotifyEventHandler clientNotifyEvent;
 
-    public void addServerNotifyListener(INioSockNotifyEventHandler notifyEventHandler)
+    public void addNotifyListener(INioSockNotifyEventHandler notifyEventHandler)
     {
-        serverNotifyEvent = notifyEventHandler;
 
-        if (mTcpServer != null)
+       if (controller != null)
+       {
+           controller.addNotifyHandler(notifyEventHandler);
+       }
+    }
+
+
+    public void init() {
+
+        if (controller == null)
         {
-            mTcpServer.addNotifyHandler(serverNotifyEvent);
+            controller = new NioSockController();
+            controller.init();
         }
-        //else if ()
-    }
-    public void addClientNotifyListener(INioSockNotifyEventHandler notifyEventHandler)
-    {
-        clientNotifyEvent = notifyEventHandler;
-        //if ()
+
     }
 
-    public void initServer(int type) {
-        if (type == NioTypes.TYPE_TCP_SERVER) {
-            if (mTcpServer == null) {
-                mTcpServer = new NioTcpServer();
-                mTcpServer.init();
-            }
 
-        } else if (type == NioTypes.TYPE_UDP_SERVER) {
-
-        }
-    }
 
     public boolean createServer(int type, int port) {
         boolean isSuc = false;
 
-        if (type == NioTypes.TYPE_TCP_SERVER) {
-            if (mTcpServer != null) {
-                isSuc = mTcpServer.createServer(port);
+        if (type == NioTypes.TYPE_TCP_SERVER)
+        {
+            if (controller != null)
+            {
+                isSuc = controller.createTcpService(port);
             }
-
-        } else if (type == NioTypes.TYPE_UDP_SERVER) {
-
+        }
+        else if (type == NioTypes.TYPE_UDP_SERVER)
+        {
+            if (controller != null)
+            {
+                isSuc = controller.createUdpService(port);
+            }
         }
 
         return isSuc;
     }
 
 
-    public boolean createClient(int type, String host, int port) {
+    public boolean createClient(String host, int port) {
         boolean isSuc = false;
 
 
-        if (type == NioTypes.TYPE_TCP_CLIENT) {
-
-        } else if (type == NioTypes.TYPE_UDP_CLIENT) {
-
+        if (controller != null)
+        {
+           isSuc = controller.createConnection(host, port);
         }
 
 
@@ -79,34 +73,46 @@ public class NioSocketProvider {
     }
 
     public void stopServer(int type, int port) {
-        try {
-            objLock.tryLock(1, TimeUnit.SECONDS);
 
-            if (type == NioTypes.TYPE_TCP_SERVER) {
-                if (mTcpServer != null) {
-                    mTcpServer.removeServer(port);
-                }
+        if (type == NioTypes.TYPE_TCP_SERVER)
+        {
+            if (controller != null)
+            {
+                controller.removeTcpService(port);
             }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } finally {
-            objLock.unlock();
         }
+        else if (type == NioTypes.TYPE_UDP_SERVER)
+        {
+            if (controller != null)
+            {
+                controller.removeUdpService(port);
+            }
+        }
+
     }
 
     public void stopAllServer(int type) {
-        if (type == NioTypes.TYPE_TCP_SERVER) {
-            if (mTcpServer != null) {
-                mTcpServer.removeAllServer();
+        if (type == NioTypes.TYPE_TCP_SERVER)
+        {
+            if (controller != null)
+            {
+                controller.removeAllTcpService();
+            }
+        }
+        else if (type == NioTypes.TYPE_UDP_SERVER)
+        {
+            if (controller != null)
+            {
+                controller.removeAllUdpService();
             }
         }
     }
 
-    public void destroyServer(int type) {
-        if (type == NioTypes.TYPE_TCP_SERVER) {
-            if (mTcpServer != null) {
-                mTcpServer.onDestroy();
-            }
+    public void destroyController()
+    {
+        if (controller != null)
+        {
+            controller.destroyController();
         }
     }
 

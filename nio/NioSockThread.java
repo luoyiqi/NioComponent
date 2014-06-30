@@ -1,6 +1,7 @@
 package NioComponent.nio;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.Iterator;
@@ -43,12 +44,15 @@ public class NioSockThread extends Thread {
 
             while (isRun) {
 
+
                 numKeys = mSelector.select();
 
                 if (numKeys <= 0) {
                     /**
                      * if enter this,  selector wake up must be used somewhere.
                      */
+
+
                     while (true) {
 
                         if (mSelector != null) {
@@ -73,60 +77,106 @@ public class NioSockThread extends Thread {
 
                     if (key.isAcceptable()) {
 
-                        ServerSocketChannel serverSocketChannel = (ServerSocketChannel) key.channel();
-                        SocketChannel clientChannel = serverSocketChannel.accept();
-                        INioSockEventHandler handler = (INioSockEventHandler)key.attachment();
 
-                        if (clientChannel != null && handler != null) {
+                        NioSockEntity acceptEntity = (NioSockEntity) key.attachment();
 
-                            nioSockEntity = mPool.obtain();
-                            if (nioSockEntity != null) {
+                        if (acceptEntity != null) {
+
+                            if (acceptEntity.channelType == NioTypes.TYPE_TCP_SERVER) {
 
 
-                                nioSockEntity.channel = clientChannel;
+                                ServerSocketChannel serverSocketChannel = (ServerSocketChannel) key.channel();
+                                SocketChannel clientChannel = serverSocketChannel.accept();
+                                if (clientChannel != null) {
 
-                                nioSockEntity.decodeSocketAddress(clientChannel);
+                                    nioSockEntity = mPool.obtain();
+                                    if (nioSockEntity != null) {
 
-                                clientChannel.configureBlocking(false);
-                                clientChannel.register(mSelector, SelectionKey.OP_READ, handler);
+                                        nioSockEntity.channel = clientChannel;
 
-                                handler.addClientMap(nioSockEntity);
-                            } else {
-                                clientChannel.close();// pool empty
+                                        nioSockEntity.decodeSocketAddress(clientChannel);
+
+                                        clientChannel.configureBlocking(false);
+                                        clientChannel.register(mSelector, SelectionKey.OP_READ, acceptEntity.handle);
+
+                                        NioSockEntity.INioSockEventHandler handler = (NioSockEntity.INioSockEventHandler) nioSockEntity.handle;
+                                        handler.birthSocket(nioSockEntity);
+
+                                    } else {
+                                        clientChannel.close();// pool empty
+                                    }
+                                }
+                            } else if (acceptEntity.channelType == NioTypes.TYPE_UDP_SERVER) {
+                                //
                             }
+                        } else {
+                            key.channel().close();
                         }
 
+                    } else if (key.isConnectable()) {
 
-                    }else if (key.isConnectable())
-                    {
-                        SocketChannel channel = (SocketChannel)key.channel();
-                        INioSockEventHandler handler = (INioSockEventHandler)key.attachment();
+                        SocketChannel channel = (SocketChannel) key.channel();
+                        NioSockEntity connectNioSockEntity = (NioSockEntity) key.attachment();
 
-                        if (channel != null && handler != null)
-                        {
-                            nioSockEntity = mPool.obtain();
-                            if (nioSockEntity != null)
-                            {
-                                nioSockEntity.channel = channel;
-                                nioSockEntity.decodeSocketAddress(channel);
+                        if (channel != null) {
+                            if (connectNioSockEntity != null) {
 
-                                channel.register(mSelector, SelectionKey.OP_READ, handler);
+                                nioSockEntity = mPool.obtain();
+                                if (nioSockEntity != null) {
+                                    NioSockEntity.INioSockEventHandler handler = (NioSockEntity.INioSockEventHandler) nioSockEntity.handle;
 
-                                handler.addClientMap(nioSockEntity);
-                            }
-                            else
-                            {
+                                    try {
+                                        if (channel.finishConnect()) {
+
+
+                                            if (channel.isConnected()) {
+
+                                                channel.register(mSelector, SelectionKey.OP_READ, connectNioSockEntity.handle);
+                                                handler.birthSocket(nioSockEntity);
+
+                                            }
+                                            else
+                                            {
+                                                //send msg notify?
+                                                mPool.recovery(nioSockEntity);
+                                            }
+                                        }
+                                        else {
+                                            //send mag notify?
+                                            mPool.recovery(nioSockEntity);
+                                        }
+
+                                    } catch (ConnectException ce) {
+
+                                        //need callback
+                                        handler.stillbirthSocket(connectNioSockEntity);
+                                        mPool.recovery(connectNioSockEntity);
+
+
+                                    }
+                                } else {
+                                    //need to send msg to know pool empty
+                                }
+                            } else {
                                 channel.close();
                             }
                         }
-                    }
-                    else if (key.isReadable()) {
+
+
+                    } else if (key.isReadable()) {
+
+
                         SocketChannel channel = (SocketChannel) key.channel();
+
                         mBuffer.clear();
+
                         int rs = channel.read(mBuffer);
+
                         nioSockEntity = mPool.obtain();
 
                         if (nioSockEntity != null) {
+
+                            NioSockEntity.INioSockEventHandler handler = (NioSockEntity.INioSockEventHandler) nioSockEntity.handle;
 
                             nioSockEntity.decodeSocketAddress(channel);
 
@@ -136,26 +186,22 @@ public class NioSockThread extends Thread {
                                 nioSockEntity.dataBuffer.put(mBuffer);
                                 nioSockEntity.channel = channel;
 
-                                INioSockEventHandler handler = (INioSockEventHandler)key.attachment();
-                                if (handler != null)
-                                {
-                                    handler.addReceiveBufferQueue(nioSockEntity);
-                                }
-                                else
-                                {
-                                    System.out.println("null........");
+
+                                if (handler != null) {
+                                    handler.birthBuffer(nioSockEntity);
+                                } else {
                                     mPool.recovery(nioSockEntity);
                                 }
 
                             } else if (rs == 0) {
                                 //?
+
+
                                 mPool.recovery(nioSockEntity);
                             } else {
                                 //remote socket close.
-                                INioSockEventHandler handler = (INioSockEventHandler)key.attachment();
-                                if (handler != null)
-                                {
-                                    handler.removeClient(nioSockEntity.bindPort, nioSockEntity.host, nioSockEntity.port);
+                                if (handler != null) {
+                                    handler.deadSocket(nioSockEntity);
                                 }
                                 mPool.recovery(nioSockEntity);
                             }
@@ -167,7 +213,9 @@ public class NioSockThread extends Thread {
 
 
                     }
+
                     iterator.remove();
+
                 }
             }
 
@@ -175,8 +223,11 @@ public class NioSockThread extends Thread {
         } catch (IOException ioe) {
             if (nioSockEntity != null)
                 mPool.recovery(nioSockEntity);
+
+
         }
 
-
     }
+
+
 }
