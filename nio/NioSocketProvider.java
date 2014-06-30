@@ -59,13 +59,13 @@ public class NioSocketProvider {
     }
 
 
-    public boolean createClient(String host, int port) {
+    public boolean createClient(int type, String host, int port) {
         boolean isSuc = false;
 
 
         if (controller != null)
         {
-           isSuc = controller.createConnection(host, port);
+           isSuc = controller.createConnection(type, host, port);
         }
 
 

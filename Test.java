@@ -46,7 +46,7 @@ public class Test {
         boolean isSuc;
         isSuc = nioSocketProvider.createServer(NioTypes.TYPE_TCP_SERVER, 10087);
         System.out.println(isSuc);
-        isSuc = nioSocketProvider.createClient("192.168.3.8", 10086);
+        isSuc = nioSocketProvider.createClient(NioTypes.TYPE_TCP_CLIENT, "192.168.3.8", 10086);
         System.out.println(isSuc);
 
 

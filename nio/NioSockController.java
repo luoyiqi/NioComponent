@@ -24,7 +24,10 @@ public class NioSockController extends ANioController {
 
     public NioSockController() {
         super();
-        mBindSocks = new NioSockMap<NioSockEntity>(capacity);
+        mBindTcpServiceSocks = new NioSockMap<NioSockEntity>(capacity);
+        mBindUdpServiceSocks = new NioSockMap<NioSockEntity>(capacity);
+        mBindTcpConnectionSocks = new NioSockMap<NioSockEntity>(capacity);
+        mBindUdpConnectionSocks = new NioSockMap<NioSockEntity>(capacity);
         mRemoteSocks = new NioSockMap<NioSockEntity>(capacity);
         mPool = new NioSockEntityPool(poolCapacity, this);
         mReceiveQueue = new LinkedList<NioSockEntity>();
@@ -34,7 +37,10 @@ public class NioSockController extends ANioController {
         super();
         this.capacity = capacity;
         this.poolCapacity = poolCapacity;
-        mBindSocks = new NioSockMap<NioSockEntity>(capacity);
+        mBindTcpServiceSocks = new NioSockMap<NioSockEntity>(capacity);
+        mBindUdpServiceSocks = new NioSockMap<NioSockEntity>(capacity);
+        mBindTcpConnectionSocks = new NioSockMap<NioSockEntity>(capacity);
+        mBindUdpConnectionSocks = new NioSockMap<NioSockEntity>(capacity);
         mRemoteSocks = new NioSockMap<NioSockEntity>(capacity);
         mPool = new NioSockEntityPool(poolCapacity, this);
         mReceiveQueue = new LinkedList<NioSockEntity>();
@@ -80,7 +86,7 @@ public class NioSockController extends ANioController {
 
                 String key = serverSocketChannel.socket().getLocalPort() + "";
 
-                isSuc = mBindSocks.addChannel(key, nioSockEntity);
+                isSuc = mBindTcpServiceSocks.addChannel(key, nioSockEntity);
 
 
             } catch (BindException be) {
@@ -101,7 +107,7 @@ public class NioSockController extends ANioController {
         try {
             objLock.tryLock(1, TimeUnit.SECONDS);
 
-            NioSockEntity nioSockEntity = mBindSocks.removeChannel(key);
+            NioSockEntity nioSockEntity = mBindTcpServiceSocks.removeChannel(key);
             if (nioSockEntity != null) {
                 if (nioSockEntity.channelTcpServer != null) {
                     try {
@@ -127,18 +133,11 @@ public class NioSockController extends ANioController {
 
         try {
             objLock.tryLock(1, TimeUnit.SECONDS);
-            Collection<NioSockEntity> collection = mBindSocks.getChannels();
+            Collection<NioSockEntity> collection = mBindTcpServiceSocks.getChannels();
             ArrayList<String> keys = new ArrayList<String>();
 
-            for (NioSockEntity entity : collection) {
-                if (entity.channelType == NioTypes.TYPE_TCP_SERVER) {
-                    keys.add(entity.bindPort + "");
-                }
-            }
-
-            for(String key: keys)
+            for (NioSockEntity nioSockEntity:collection)
             {
-                NioSockEntity nioSockEntity = mBindSocks.removeChannel(key);
                 if (nioSockEntity != null && nioSockEntity.channelTcpServer != null)
                 {
                     nioSockEntity.channelTcpServer.close();
@@ -146,6 +145,7 @@ public class NioSockController extends ANioController {
                 }
 
             }
+            mBindTcpServiceSocks.clear();
 
 
         } catch (InterruptedException e) {
@@ -224,7 +224,7 @@ public class NioSockController extends ANioController {
     }
 
     @Override
-    public boolean createConnection(String host, int port) {
+    public boolean createConnection(int type, String host, int port) {
         boolean isSuc = false;
 
         try {
@@ -240,6 +240,7 @@ public class NioSockController extends ANioController {
                 nioSockEntity.port = port;
                 nioSockEntity.host = host;
                 nioSockEntity.channel = channel;
+                nioSockEntity.channelType = type;
 
                 channel.connect(new InetSocketAddress(nioSockEntity.host, nioSockEntity.port));
 
@@ -266,13 +267,22 @@ public class NioSockController extends ANioController {
 
             objLock.tryLock(1, TimeUnit.SECONDS);
 
-            NioSockEntity nioSockEntity =  mBindSocks.removeChannel(key);
+            NioSockEntity nioSockEntity =  mBindTcpConnectionSocks.removeChannel(key);
             if (nioSockEntity != null && nioSockEntity.channel != null)
             {
                 nioSockEntity.channel.close();
 
                 mPool.recovery(nioSockEntity);
             }
+
+            nioSockEntity =  mBindUdpConnectionSocks.removeChannel(key);
+            if (nioSockEntity != null && nioSockEntity.channel != null)
+            {
+                nioSockEntity.channel.close();
+
+                mPool.recovery(nioSockEntity);
+            }
+
 
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -284,20 +294,34 @@ public class NioSockController extends ANioController {
     }
 
     @Override
-    public void removeAllConnection() {
+    public void removeAllLocalConnection() {
         try
         {
             objLock.tryLock(1, TimeUnit.SECONDS);
 
-           Collection<NioSockEntity> collection = mRemoteSocks.getChannels();
+            Collection<NioSockEntity> collection;
 
-            for(NioSockEntity entity:collection)
+            collection = mBindTcpConnectionSocks.getChannels();
+
+            for (NioSockEntity entity: collection)
             {
                 if (entity != null && entity.channel != null)
                 {
                     entity.channel.close();
+                    mPool.recovery(entity);
                 }
             }
+
+            collection = mBindUdpConnectionSocks.getChannels();
+            for (NioSockEntity entity: collection)
+            {
+                if (entity != null && entity.channel != null)
+                {
+                    entity.channel.close();
+                    mPool.recovery(entity);
+                }
+            }
+
 
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -312,13 +336,16 @@ public class NioSockController extends ANioController {
     public void destroyController() {
 
 
-        removeAllConnection();
+        removeAllLocalConnection();
         removeAllRemoteConnection();
         removeAllTcpService();
         removeAllUdpService();
 
         mRemoteSocks.clear();
-        mBindSocks.clear();
+        mBindTcpConnectionSocks.clear();
+        mBindUdpConnectionSocks.clear();
+        mBindTcpServiceSocks.clear();
+        mBindUdpServiceSocks.clear();
         mReceiveQueue.clear();
         mPool.onDestroy();
 

@@ -10,7 +10,10 @@ public abstract class ANioController implements NioSockEntity.INioSockEventHandl
     protected int capacity = 1024;
     protected int poolCapacity = 6 * 1024;//server:1024,client:1024,buffer:4096
 
-    protected NioSockMap<NioSockEntity> mBindSocks;
+    protected NioSockMap<NioSockEntity> mBindTcpServiceSocks;
+    protected NioSockMap<NioSockEntity> mBindTcpConnectionSocks;
+    protected NioSockMap<NioSockEntity> mBindUdpServiceSocks;
+    protected NioSockMap<NioSockEntity> mBindUdpConnectionSocks;
     protected NioSockMap<NioSockEntity> mRemoteSocks;
     protected NioSockEntityPool mPool;
     protected Queue<NioSockEntity> mReceiveQueue;
@@ -40,9 +43,10 @@ public abstract class ANioController implements NioSockEntity.INioSockEventHandl
     public abstract void removeRemoteConnection(String ip, int port);
     public abstract void removeAllRemoteConnection();
 
-    public abstract boolean createConnection(String host, int port);
+    public abstract boolean createConnection(int type, String host, int port);
     public abstract void removeLocalConnection(int bindPort);
-    public abstract void  removeAllConnection();
+    public abstract void removeAllLocalConnection();
+
 
 
     public abstract void destroyController();
