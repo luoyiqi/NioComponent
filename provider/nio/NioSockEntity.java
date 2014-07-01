@@ -1,11 +1,9 @@
-package NioComponent.nio;
+package NioComponent.provider.nio;
 
 
-import java.io.ByteArrayOutputStream;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.nio.ByteBuffer;
+import java.nio.channels.DatagramChannel;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 
@@ -16,8 +14,10 @@ import java.nio.channels.SocketChannel;
  */
 public class NioSockEntity {
     public int channelType;  // TCP server/client UDP server/client
-    public SocketChannel channel; //TCP client UDP server/client
-    public ServerSocketChannel channelTcpServer; //   channel ∩ channelTcpServer = Φ
+    public SocketChannel tcpChannel; //TCP client
+    public ServerSocketChannel tcpChannelServer; //   (tcpChannel | udpChannel ) ∩ channelTcpServer = Φ
+    public DatagramChannel udpChannel; //UDP client /server
+
 
     public int bindPort;
     public String host;
@@ -54,8 +54,9 @@ public class NioSockEntity {
     public void reset()
     {
         channelType = -1;
-        channel = null;
-        channelTcpServer  = null;
+        udpChannel = null;
+        tcpChannel = null;
+        tcpChannelServer  = null;
 
         bindPort = -1;
         host = "";
@@ -68,8 +69,9 @@ public class NioSockEntity {
     public void reset(Object handler)
     {
         channelType = -1;
-        channel = null;
-        channelTcpServer  = null;
+        udpChannel = null;
+        tcpChannel = null;
+        tcpChannelServer  = null;
 
         bindPort = -1;
         host = "";
@@ -93,6 +95,17 @@ public class NioSockEntity {
     public void decodeSocketAddress(ServerSocketChannel channel)
     {
         bindPort = channel.socket().getLocalPort();
+    }
+
+    public void decodeSocketAddress(DatagramChannel channel)
+    {
+        InetSocketAddress address = (InetSocketAddress)channel.socket().getRemoteSocketAddress();
+        if (address != null) {
+            host = address.getAddress().getHostAddress();
+            //notify:  if as client  'bindPort' is allocate local port, 'port' is connect remote port.
+            bindPort = channel.socket().getLocalPort();
+            port = address.getPort();
+        }
     }
 
 }
