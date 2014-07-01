@@ -1,6 +1,9 @@
 package NioComponent.provider;
 
 
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
@@ -23,7 +26,9 @@ public class NioSockEntity {
     public String host;
     public int port;
 
-    public ByteBuffer dataBuffer;
+    private ByteArrayOutputStream outputStream;
+    private ByteBuffer cache;
+    public int bufferSize;
 
     public int step;
     public Object handle;
@@ -42,13 +47,14 @@ public class NioSockEntity {
 
     public NioSockEntity()
     {
-
-        dataBuffer = ByteBuffer.allocate(1024);
+        cache = ByteBuffer.allocate(1024);
+        outputStream = new ByteArrayOutputStream();
     }
+
     public NioSockEntity(int capacity)
     {
-
-        dataBuffer = ByteBuffer.allocate(capacity);
+        cache = ByteBuffer.allocate(capacity);
+        outputStream = new ByteArrayOutputStream();
     }
 
     public void reset()
@@ -61,8 +67,10 @@ public class NioSockEntity {
         bindPort = -1;
         host = "";
         handle = null;
+        bufferSize = 0;
 
-        dataBuffer.clear();
+        outputStream.reset();
+        cache.clear();
 
     }
 
@@ -77,9 +85,28 @@ public class NioSockEntity {
         host = "";
 
         handle = handler;
+        bufferSize = 0;
 
-        dataBuffer.clear();
+        outputStream.reset();
+        cache.clear();
 
+
+    }
+
+    public void setBuffer(ByteBuffer byteBuffer)
+    {
+        cache.put(byteBuffer);
+        cache.flip();
+    }
+
+    public byte[] getBuffer()
+    {
+        try {
+            outputStream.write(cache.array());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return outputStream.toByteArray();
     }
 
     public void decodeSocketAddress(SocketChannel channel)

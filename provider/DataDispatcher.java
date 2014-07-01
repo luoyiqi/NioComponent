@@ -5,7 +5,7 @@ import java.util.Queue;
 /**
  * Created by charlown on 2014/7/1.
  */
-public class DataDispatcher extends Thread{
+public class DataDispatcher extends Thread {
     public boolean isRun = true;
 
     public NioSockEntityPool mPool;
@@ -24,32 +24,26 @@ public class DataDispatcher extends Thread{
 
         NioSockEntity entity;
 
-        while (isRun)
-        {
-            if (mRemoteTcpReceiveQueue != null)
-            {
+        while (isRun) {
+            if (mRemoteTcpReceiveQueue != null) {
                 if (!mRemoteTcpReceiveQueue.isEmpty()) {
                     entity = mRemoteTcpReceiveQueue.poll();
-                    if (entity != null && serviceDataEvent != null)
-                    {
-                        entity.dataBuffer.flip();
-                        byte[] data = entity.dataBuffer.array();
-                        serviceDataEvent.notifyRemoteReceiveBuffer(entity.bindPort, entity.host, entity.port, data, data.length);
+                    if (entity != null && serviceDataEvent != null) {
+                        byte[] data = entity.getBuffer();
+                        serviceDataEvent.notifyRemoteReceiveBuffer(entity.bindPort, entity.host, entity.port, data, entity.bufferSize);
                         if (mPool != null)
                             mPool.recovery(entity);
                     }
 
                 }
 
-            }else if (mRemoteUdpReceiveQueue != null)
-            {
+            }
+            if (mRemoteUdpReceiveQueue != null) {
                 if (!mRemoteUdpReceiveQueue.isEmpty()) {
                     entity = mRemoteUdpReceiveQueue.poll();
-                    if (entity != null && serviceDataEvent != null)
-                    {
-                        entity.dataBuffer.flip();
-                        byte[] data = entity.dataBuffer.array();
-                        serviceDataEvent.notifyRemoteReceiveBuffer(entity.bindPort, entity.host, entity.port, data, data.length);
+                    if (entity != null && serviceDataEvent != null) {
+                        byte[] data = entity.getBuffer();
+                        serviceDataEvent.notifyRemoteReceiveBuffer(entity.bindPort, entity.host, entity.port, data, entity.bufferSize);
                         if (mPool != null)
                             mPool.recovery(entity);
                     }
@@ -57,15 +51,14 @@ public class DataDispatcher extends Thread{
                 }
 
             }
-            else if (mBindTcpReceiveQueue != null)
-            {
+
+            if (mBindTcpReceiveQueue != null) {
                 if (!mBindTcpReceiveQueue.isEmpty()) {
                     entity = mBindTcpReceiveQueue.poll();
-                    if (entity != null && connectionDataEvent != null)
-                    {
-                        entity.dataBuffer.flip();
-                        byte[] data = entity.dataBuffer.array();
-                        connectionDataEvent.notifyBindReceiveBuffer(entity.bindPort, data, data.length);
+                    if (entity != null && connectionDataEvent != null) {
+
+                        byte[] data = entity.getBuffer();
+                        connectionDataEvent.notifyBindReceiveBuffer(entity.bindPort, entity.host, entity.port, data, entity.bufferSize);
                         if (mPool != null)
                             mPool.recovery(entity);
                     }
@@ -73,15 +66,13 @@ public class DataDispatcher extends Thread{
                 }
 
             }
-            else if (mBindUdpReceiveQueue != null)
-            {
+
+            if (mBindUdpReceiveQueue != null) {
                 if (!mBindUdpReceiveQueue.isEmpty()) {
                     entity = mBindUdpReceiveQueue.poll();
-                    if (entity != null && connectionDataEvent != null)
-                    {
-                        entity.dataBuffer.flip();
-                        byte[] data = entity.dataBuffer.array();
-                        connectionDataEvent.notifyBindReceiveBuffer(entity.port, data, data.length);
+                    if (entity != null && connectionDataEvent != null) {
+                        byte[] data = entity.getBuffer();
+                        connectionDataEvent.notifyBindReceiveBuffer(entity.bindPort, entity.host, entity.port, data, entity.bufferSize);
                         if (mPool != null)
                             mPool.recovery(entity);
                     }

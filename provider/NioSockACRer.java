@@ -2,6 +2,8 @@ package NioComponent.provider;
 
 import java.io.IOException;
 import java.net.ConnectException;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.Iterator;
@@ -17,7 +19,6 @@ public class NioSockACRer extends Thread {
     public boolean isRun = true;
     public INotifyExceptionMsgHandler exceptionMsgEvent;
     public INotifyOperationStateHandler operationStateEvent;
-
 
 
     @Override
@@ -40,7 +41,7 @@ public class NioSockACRer extends Thread {
                      * if enter this,  selector wake up must be used somewhere.
                      */
 
-
+/*
                     while (true) {
 
                         if (mSelector != null) {
@@ -55,6 +56,9 @@ public class NioSockACRer extends Thread {
                             break;
                         }
                     }
+                    */
+                    //above way test fail: when server create, follow client create, add client key may be empty, and then running until server has key to wake up this thread.
+                    sleep(100); //has a good way to instead of ?
                 }
 
                 Set<SelectionKey> selectionKeySet = mSelector.selectedKeys();
@@ -103,39 +107,36 @@ public class NioSockACRer extends Thread {
 
                         if (seed != null) {
 
-                            nioSockEntity = mPool.obtain();
-                            if (nioSockEntity != null) {
-                                NioSockEntity.INioSockEventHandler handler = (NioSockEntity.INioSockEventHandler) nioSockEntity.handle;
 
-                                try {
-                                    if (channel.finishConnect()) {
+                            NioSockEntity.INioSockEventHandler handler = (NioSockEntity.INioSockEventHandler) seed.handle; //notify: as init is INioSockEventHandler, if not, pool obtain one, and give channel to it.
+
+                            try {
+                                if (channel.finishConnect()) {
 
 
-                                        if (channel.isConnected()) {
+                                    if (channel.isConnected()) {
 
-                                            channel.register(mSelector, SelectionKey.OP_READ, seed);//instead of connect key
-                                            handler.birthSocket(nioSockEntity);
+                                        channel.register(mSelector, SelectionKey.OP_READ, seed);//instead of connect key
+                                        handler.birthSocket(seed);
 
-                                        } else {
-                                            //send msg notify?
-                                            mPool.recovery(nioSockEntity);
-                                        }
                                     } else {
-                                        //send mag notify?
+                                        //send msg notify?
                                         mPool.recovery(nioSockEntity);
                                     }
-
-                                } catch (ConnectException ce) {
-
-                                    //need callback
-                                    handler.stillbirthSocket(seed);
-                                    mPool.recovery(seed);
-
-
+                                } else {
+                                    //send mag notify?
+                                    mPool.recovery(nioSockEntity);
                                 }
-                            } else {
-                                //need to send msg to know pool empty
+
+                            } catch (ConnectException ce) {
+
+                                //need callback
+                                handler.stillbirthSocket(seed);
+                                mPool.recovery(seed);
+
+
                             }
+
 
                         } else {
                             key.channel().close();
@@ -170,8 +171,8 @@ public class NioSockACRer extends Thread {
                                         if (rs > 0) {
                                             mBuffer.flip();
 
-                                            nioSockEntity.dataBuffer.put(mBuffer);
-                                            nioSockEntity.tcpChannel = channel;
+                                            nioSockEntity.setBuffer(mBuffer);
+                                            nioSockEntity.bufferSize = rs;
 
 
                                             if (handler != null) {
@@ -201,7 +202,11 @@ public class NioSockACRer extends Thread {
                                 case NioTypes.TYPE_UDP_SERVER:
                                 case NioTypes.TYPE_UDP_CLIENT: {
                                     DatagramChannel channel = (DatagramChannel) key.channel();
-                                    rs = channel.read(mBuffer);
+
+                                    SocketAddress address =  channel.receive(mBuffer);
+
+
+
 
                                     nioSockEntity = mPool.obtain();
 
@@ -210,13 +215,16 @@ public class NioSockACRer extends Thread {
 
                                         nioSockEntity.channelType = seed.channelType;
                                         nioSockEntity.udpChannel = channel;
-                                        nioSockEntity.decodeSocketAddress(channel);
+                                        nioSockEntity.bindPort = seed.bindPort;
+                                        nioSockEntity.host = ((InetSocketAddress)address).getAddress().getHostAddress();
+                                        nioSockEntity.port = ((InetSocketAddress)address).getPort();
 
-                                        if (rs > 0) {
+
                                             mBuffer.flip();
 
-                                            nioSockEntity.dataBuffer.put(mBuffer);
-                                            nioSockEntity.udpChannel = channel;
+                                            rs = mBuffer.array().length;
+                                            nioSockEntity.setBuffer(mBuffer);
+                                            nioSockEntity.bufferSize = rs;
 
 
                                             if (handler != null) {
@@ -225,16 +233,6 @@ public class NioSockACRer extends Thread {
                                                 mPool.recovery(nioSockEntity);
                                             }
 
-                                        } else if (rs == 0) {
-                                            //?
-                                            mPool.recovery(nioSockEntity);
-                                        } else {
-                                            //remote socket close.
-                                            if (handler != null) {
-                                                handler.deadSocket(nioSockEntity);
-                                            }
-                                            mPool.recovery(nioSockEntity);
-                                        }
 
                                     } else {
                                         //pool empty
@@ -260,6 +258,8 @@ public class NioSockACRer extends Thread {
                 mPool.recovery(nioSockEntity);
 
 
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
 
     }

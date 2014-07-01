@@ -64,6 +64,8 @@ public class NioSockController extends ANioController {
         nioSockACRer.mSelector = mSelector;
         nioSockACRer.mPool = mPool;
         nioSockACRer.isRun = true;
+        nioSockACRer.exceptionMsgEvent = exceptionMsgEvent;
+        nioSockACRer.operationStateEvent = operationStateEvent;
         nioSockACRer.start();
 
         dataDispatcher = new DataDispatcher();
@@ -72,25 +74,12 @@ public class NioSockController extends ANioController {
         dataDispatcher.mBindUdpReceiveQueue = mBindUdpReceiveQueue;
         dataDispatcher.mRemoteTcpReceiveQueue = mRemoteTcpReceiveQueue;
         dataDispatcher.mRemoteUdpReceiveQueue = mRemoteUdpReceiveQueue;
+        dataDispatcher.connectionDataEvent = connectionDataEvent;
+        dataDispatcher.serviceDataEvent = serviceDataEvent;
         dataDispatcher.isRun = true;
         dataDispatcher.start();
     }
 
-    @Override
-    public void notifySetEvent() {
-
-        if (nioSockACRer != null)
-        {
-            nioSockACRer.exceptionMsgEvent = exceptionMsgEvent;
-            nioSockACRer.operationStateEvent = operationStateEvent;
-        }
-
-        if (dataDispatcher != null)
-        {
-            dataDispatcher.connectionDataEvent = connectionDataEvent;
-            dataDispatcher.serviceDataEvent = serviceDataEvent;
-        }
-    }
 
     @Override
     public boolean createTcpService(int bindPort) {
@@ -169,7 +158,7 @@ public class NioSockController extends ANioController {
                 channel.configureBlocking(false);
                 channel.socket().bind(new InetSocketAddress(bindPort));
                 mSelector.wakeup();
-                channel.register(mSelector, SelectionKey.OP_ACCEPT, nioSockEntity);
+                channel.register(mSelector, SelectionKey.OP_READ, nioSockEntity);
 
                 isSuc = mBindUdpServiceSocks.addChannel(nioSockEntity.bindPort + "", nioSockEntity);
 
