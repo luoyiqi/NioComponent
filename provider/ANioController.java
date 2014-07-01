@@ -1,6 +1,4 @@
-package NioComponent.provider.nio;
-
-import NioComponent.provider.*;
+package NioComponent.provider;
 
 import java.nio.channels.Selector;
 import java.util.Queue;

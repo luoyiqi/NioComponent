@@ -1,9 +1,4 @@
-package NioComponent.provider.nio;
-
-import NioComponent.provider.INotifyConnectionDataHandler;
-import NioComponent.provider.INotifyExceptionMsgHandler;
-import NioComponent.provider.INotifyOperationStateHandler;
-import NioComponent.provider.INotifyServiceDataHandler;
+package NioComponent.provider;
 
 import java.util.Queue;
 

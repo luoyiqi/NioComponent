@@ -1,8 +1,6 @@
 package NioComponent.provider;
 
 
-import NioComponent.provider.nio.NioSockController;
-
 /**
  * Created by charlown on 14-6-25.
  */

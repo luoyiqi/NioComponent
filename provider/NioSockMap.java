@@ -1,4 +1,4 @@
-package NioComponent.provider.nio;
+package NioComponent.provider;
 
 import java.util.Collection;
 import java.util.HashMap;

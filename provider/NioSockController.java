@@ -1,6 +1,4 @@
-package NioComponent.provider.nio;
-
-import NioComponent.provider.NioTypes;
+package NioComponent.provider;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
