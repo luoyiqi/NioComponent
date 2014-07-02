@@ -108,11 +108,7 @@ public class NioSocketProvider {
             if (controller != null) {
                 controller.removeRemoteTcpConnection(host, port);
             }
-        } else if (type == NioTypes.TYPE_UDP_CLIENT) {
-            if (controller != null) {
-                controller.removeRemoteUdpConnection(host, port);
-            }
-        }
+        } 
     }
 
     public void stopAllRemoteConnection(int type) {
