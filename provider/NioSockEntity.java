@@ -97,6 +97,7 @@ public class NioSockEntity {
     {
         cache.put(byteBuffer);
         cache.flip();
+        bufferSize = cache.remaining();
     }
 
     public byte[] getBuffer()

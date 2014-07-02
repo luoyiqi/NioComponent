@@ -55,8 +55,12 @@ public class Test {
 
         boolean isSuc;
 
+        /*
         isSuc = nioSocketProvider.createServer(NioTypes.TYPE_UDP_SERVER, 10088);
         System.out.println("sever " + isSuc);
+        isSuc = nioSocketProvider.createServer(NioTypes.TYPE_TCP_SERVER, 10087);
+        System.out.println("sever " + isSuc);*/
+        isSuc = nioSocketProvider.createConnection(NioTypes.TYPE_UDP_CLIENT, "192.168.3.8", 10088);
 
 
     }

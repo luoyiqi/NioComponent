@@ -271,9 +271,13 @@ public class NioSockController extends ANioController {
                 channel.connect(new InetSocketAddress(host, port));
 
                 mSelector.wakeup();
-                channel.register(mSelector, SelectionKey.OP_CONNECT, nioSockEntity);
+                channel.register(mSelector, SelectionKey.OP_READ, nioSockEntity);
 
-                isSuc = true;
+
+                nioSockEntity.bindPort = channel.socket().getLocalPort();
+
+
+                isSuc = mBindUdpConnectionSocks.addChannel(nioSockEntity.bindPort + "", nioSockEntity);
 
             } catch (IOException e) {
                 e.printStackTrace();
@@ -334,15 +338,9 @@ public class NioSockController extends ANioController {
             }
             case NioTypes.TYPE_UDP_SERVER: {
                 //read client add or update
+                //better way?
                 String key = entity.host + ":" + entity.port;
                 boolean isSuc = mRemoteUdpSocks.addChannel(key, entity);
-                //callback?
-                break;
-            }
-            case NioTypes.TYPE_UDP_CLIENT: {
-                //local bind
-                String key = entity.bindPort + "";
-                boolean isSuc = mBindUdpConnectionSocks.addChannel(key, entity);
                 //callback?
                 break;
             }

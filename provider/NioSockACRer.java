@@ -146,18 +146,18 @@ public class NioSockACRer extends Thread {
                     } else if (key.isReadable()) {
 
 
-                        // SocketChannel channel = (SocketChannel) key.channel();
+
                         NioSockEntity seed = (NioSockEntity) key.attachment();
 
                         if (seed != null) {
                             mBuffer.clear();
-                            int rs;
+
 
                             switch (seed.channelType) {
                                 case NioTypes.TYPE_TCP_SERVER:
                                 case NioTypes.TYPE_TCP_CLIENT: {
                                     SocketChannel channel = (SocketChannel) key.channel();
-                                    rs = channel.read(mBuffer);
+                                    int rs = channel.read(mBuffer);
 
                                     nioSockEntity = mPool.obtain();
 
@@ -172,7 +172,7 @@ public class NioSockACRer extends Thread {
                                             mBuffer.flip();
 
                                             nioSockEntity.setBuffer(mBuffer);
-                                            nioSockEntity.bufferSize = rs;
+
 
 
                                             if (handler != null) {
@@ -203,28 +203,26 @@ public class NioSockACRer extends Thread {
                                 case NioTypes.TYPE_UDP_CLIENT: {
                                     DatagramChannel channel = (DatagramChannel) key.channel();
 
-                                    SocketAddress address =  channel.receive(mBuffer);
+                                    SocketAddress address = channel.receive(mBuffer);
+                                    if (mBuffer.hasRemaining()) {
 
 
+                                        nioSockEntity = mPool.obtain();
 
+                                        if (nioSockEntity != null) {
+                                            NioSockEntity.INioSockEventHandler handler = (NioSockEntity.INioSockEventHandler) nioSockEntity.handle;
 
-                                    nioSockEntity = mPool.obtain();
-
-                                    if (nioSockEntity != null) {
-                                        NioSockEntity.INioSockEventHandler handler = (NioSockEntity.INioSockEventHandler) nioSockEntity.handle;
-
-                                        nioSockEntity.channelType = seed.channelType;
-                                        nioSockEntity.udpChannel = channel;
-                                        nioSockEntity.bindPort = seed.bindPort;
-                                        nioSockEntity.host = ((InetSocketAddress)address).getAddress().getHostAddress();
-                                        nioSockEntity.port = ((InetSocketAddress)address).getPort();
+                                            nioSockEntity.channelType = seed.channelType;
+                                            nioSockEntity.udpChannel = channel;
+                                            nioSockEntity.bindPort = seed.bindPort;
+                                            nioSockEntity.host = ((InetSocketAddress) address).getAddress().getHostAddress();
+                                            nioSockEntity.port = ((InetSocketAddress) address).getPort();
 
 
                                             mBuffer.flip();
 
-                                            rs = mBuffer.array().length;
+
                                             nioSockEntity.setBuffer(mBuffer);
-                                            nioSockEntity.bufferSize = rs;
 
 
                                             if (handler != null) {
@@ -233,11 +231,11 @@ public class NioSockACRer extends Thread {
                                                 mPool.recovery(nioSockEntity);
                                             }
 
-
-                                    } else {
-                                        //pool empty
+                                        } else {
+                                            //pool empty
+                                        }
+                                        break;
                                     }
-                                    break;
                                 }
                             }
 
