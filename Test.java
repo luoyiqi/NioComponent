@@ -2,20 +2,61 @@ package NioComponent;
 
 import NioComponent.provider.*;
 
+import java.nio.channels.DatagramChannel;
+import java.nio.channels.SocketChannel;
+
 /**
  * Created by charlown on 2014/6/27.
  */
 public class Test {
 
-    public static void main(String [] args)
-    {
 
+
+    public static class TestCase
+    {
+        NioSocketProvider nioSocketProvider = new NioSocketProvider();
         INotifyServiceDataHandler serviceDataHandler = new INotifyServiceDataHandler() {
             @Override
-            public void notifyRemoteReceiveBuffer(int bindPort, String host, int port, final  byte[] buffer, int bufferSize) {
+            public void notifyRemoteReceiveBuffer(int type, int bindPort, String host, int port, final  byte[] buffer, int bufferSize) {
                 System.out.println("buffer size = " + buffer.length);
                 String str = new String(buffer);
                 System.out.println("on port: " + bindPort + " receive client: " + host + ":" + port + ", data: " + str +", data size = " + bufferSize);
+
+                byte[] sendBuffer = new String("hello").getBytes();
+
+                switch (type)
+                {
+                    case NioTypes.TYPE_TCP_SERVER:
+                    {
+                        try
+                        {
+                            SocketChannel channel =  nioSocketProvider.getRemoteTcpConnectionChannel(host, port);
+
+                            nioSocketProvider.addBufferToSend(type, channel, sendBuffer, sendBuffer.length);
+                        }catch (NullPointerException npe)
+                        {
+                            npe.printStackTrace();
+                        }
+
+                        break;
+                    }
+                    case NioTypes.TYPE_UDP_SERVER:
+                    {
+                        try
+                        {
+                            DatagramChannel channel =  nioSocketProvider.getUdpServiceChannel(bindPort);
+
+                            nioSocketProvider.addBufferToSend(type, channel, sendBuffer, sendBuffer.length, host, port);
+                        }catch (NullPointerException npe)
+                        {
+                            npe.printStackTrace();
+                        }
+                        break;
+                    }
+                }
+
+
+
 
             }
         };
@@ -23,10 +64,47 @@ public class Test {
         INotifyConnectionDataHandler connectionDataHandler = new INotifyConnectionDataHandler() {
 
             @Override
-            public void notifyBindReceiveBuffer(int bindPort, String from, int port, byte[] buffer, int bufferSize) {
+            public void notifyBindReceiveBuffer(int type, int bindPort, String from, int port, byte[] buffer, int bufferSize) {
                 System.out.println("buffer size = " + buffer.length);
                 String str = new String(buffer);
                 System.out.println("on port: " + bindPort + " from client: " + from + ":" + port + ", data: "+ str +", data size = " + bufferSize);
+
+
+
+                byte[] sendBuffer = new String("hello").getBytes();
+
+                switch (type)
+                {
+                    case NioTypes.TYPE_TCP_CLIENT:
+                    {
+                        try
+                        {
+                            SocketChannel channel =  nioSocketProvider.getTcpConnectionChannel(bindPort);
+
+                            nioSocketProvider.addBufferToSend(type, channel, sendBuffer, sendBuffer.length);
+                        }catch (NullPointerException npe)
+                        {
+                            npe.printStackTrace();
+                        }
+
+                        break;
+                    }
+                    case NioTypes.TYPE_UDP_CLIENT:
+                    {
+                        try
+                        {
+                            DatagramChannel channel =  nioSocketProvider.getUdpConnectionChannel(bindPort);
+
+                            nioSocketProvider.addBufferToSend(type, channel, sendBuffer, sendBuffer.length, from, port);
+                        }catch (NullPointerException npe)
+                        {
+                            npe.printStackTrace();
+                        }
+                        break;
+                    }
+                }
+
+
             }
         };
 
@@ -44,28 +122,37 @@ public class Test {
             }
         };
 
-
-        NioSocketProvider nioSocketProvider = new NioSocketProvider();
-
-
-
-        nioSocketProvider.addNotifyListener(serviceDataHandler);
-        nioSocketProvider.addNotifyListener(connectionDataHandler);
-        nioSocketProvider.addNotifyListener(exceptionMsgHandler);
-        nioSocketProvider.addNotifyListener(operationStateHandler);
-
-        nioSocketProvider.init();
+        public TestCase()
+        {
+            nioSocketProvider.addNotifyListener(serviceDataHandler);
+            nioSocketProvider.addNotifyListener(connectionDataHandler);
+            nioSocketProvider.addNotifyListener(exceptionMsgHandler);
+            nioSocketProvider.addNotifyListener(operationStateHandler);
+        }
 
 
-        boolean isSuc;
 
-        /*
-        isSuc = nioSocketProvider.createServer(NioTypes.TYPE_UDP_SERVER, 10088);
-        System.out.println("sever " + isSuc);
-        isSuc = nioSocketProvider.createServer(NioTypes.TYPE_TCP_SERVER, 10087);
-        System.out.println("sever " + isSuc);*/
-        isSuc = nioSocketProvider.createConnection(NioTypes.TYPE_TCP_CLIENT, 10087, "192.168.3.8", 10088);
+        public void start()
+        {
+            nioSocketProvider.init();
 
+           // nioSocketProvider.createConnection(NioTypes.TYPE_TCP_CLIENT, 10087, "192.168.3.8", 10088);
+           // nioSocketProvider.createServer(NioTypes.TYPE_TCP_SERVER, 10089);
+            nioSocketProvider.createServer(NioTypes.TYPE_UDP_SERVER, 10090);
+            nioSocketProvider.createConnection(NioTypes.TYPE_UDP_CLIENT, 10092, "192.168.3.8", 10091);
+        }
+
+
+    }
+
+
+
+    public static void main(String [] args)
+    {
+
+
+        TestCase testCase = new TestCase();
+        testCase.start();
 
     }
 }

@@ -1,6 +1,8 @@
 package NioComponent.provider;
 
+import java.nio.channels.DatagramChannel;
 import java.nio.channels.Selector;
+import java.nio.channels.SocketChannel;
 import java.util.Queue;
 
 /**
@@ -16,11 +18,13 @@ public abstract class ANioController implements NioSockEntity.INioSockEventHandl
     protected NioSockMap<NioSockEntity> mBindUdpServiceSocks;
     protected NioSockMap<NioSockEntity> mBindUdpConnectionSocks;
     protected NioSockMap<NioSockEntity> mRemoteTcpSocks;
-    protected NioSockEntityPool mPool, mBindPool;
+    protected NioSockEntityPool mReadPool,mWritePool, mBindPool;
     protected Queue<NioSockEntity> mBindTcpReceiveQueue;
     protected Queue<NioSockEntity> mBindUdpReceiveQueue;
     protected Queue<NioSockEntity> mRemoteTcpReceiveQueue;
     protected Queue<NioSockEntity> mRemoteUdpReceiveQueue;
+
+    protected Queue<NioSockEntity> mSendQueue;
 
     protected Selector mSelector;
 
@@ -69,6 +73,16 @@ public abstract class ANioController implements NioSockEntity.INioSockEventHandl
     public abstract void removeUdpConnection(int bindPort);//FIXME: if no input bindPort and not return port, how can know bindPort?
     public abstract void removeAllUdpConnection();
 
+
+
+    public abstract SocketChannel getConnectionSocketChannel(int bindPort);
+    public abstract SocketChannel getRemoteConnectionSocketChannel(String host, int port);
+    public abstract DatagramChannel getServiceDatagramChannel(int bindPort);
+    public abstract DatagramChannel getConnectionDatagramChannel(int bindPort);
+
+
+    public abstract void addBufferToSend(int type, SocketChannel channel, byte[] data, int dataSize);
+    public abstract void addBufferToSend(int type, DatagramChannel channel, byte[] data, int dataSize, String host, int port);
 
     public abstract void destroyController();
 }

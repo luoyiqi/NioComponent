@@ -30,7 +30,7 @@ public class DataDispatcher extends Thread {
                     entity = mRemoteTcpReceiveQueue.poll();
                     if (entity != null && serviceDataEvent != null) {
                         byte[] data = entity.getBuffer();
-                        serviceDataEvent.notifyRemoteReceiveBuffer(entity.bindPort, entity.host, entity.port, data, entity.bufferSize);
+                        serviceDataEvent.notifyRemoteReceiveBuffer(entity.channelType ,entity.bindPort, entity.host, entity.port, data, entity.bufferSize);
                         if (mPool != null)
                             mPool.recovery(entity);
                     }
@@ -43,7 +43,7 @@ public class DataDispatcher extends Thread {
                     entity = mRemoteUdpReceiveQueue.poll();
                     if (entity != null && serviceDataEvent != null) {
                         byte[] data = entity.getBuffer();
-                        serviceDataEvent.notifyRemoteReceiveBuffer(entity.bindPort, entity.host, entity.port, data, entity.bufferSize);
+                        serviceDataEvent.notifyRemoteReceiveBuffer(entity.channelType ,entity.bindPort, entity.host, entity.port, data, entity.bufferSize);
                         if (mPool != null)
                             mPool.recovery(entity);
                     }
@@ -58,7 +58,7 @@ public class DataDispatcher extends Thread {
                     if (entity != null && connectionDataEvent != null) {
 
                         byte[] data = entity.getBuffer();
-                        connectionDataEvent.notifyBindReceiveBuffer(entity.bindPort, entity.host, entity.port, data, entity.bufferSize);
+                        connectionDataEvent.notifyBindReceiveBuffer(entity.channelType ,entity.bindPort, entity.host, entity.port, data, entity.bufferSize);
                         if (mPool != null)
                             mPool.recovery(entity);
                     }
@@ -72,7 +72,7 @@ public class DataDispatcher extends Thread {
                     entity = mBindUdpReceiveQueue.poll();
                     if (entity != null && connectionDataEvent != null) {
                         byte[] data = entity.getBuffer();
-                        connectionDataEvent.notifyBindReceiveBuffer(entity.bindPort, entity.host, entity.port, data, entity.bufferSize);
+                        connectionDataEvent.notifyBindReceiveBuffer(entity.channelType ,entity.bindPort, entity.host, entity.port, data, entity.bufferSize);
                         if (mPool != null)
                             mPool.recovery(entity);
                     }

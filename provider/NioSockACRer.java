@@ -119,6 +119,8 @@ public class NioSockACRer extends Thread {
 
                                     if (channel.isConnected()) {
 
+                                        seed.decodeSocketAddress(channel);
+
                                         channel.register(mSelector, SelectionKey.OP_READ, seed);//instead of connect key
                                         handler.birthSocket(seed);
 

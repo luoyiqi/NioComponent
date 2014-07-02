@@ -16,6 +16,7 @@ public class NioSockController extends ANioController {
 
     private NioSockACRer nioSockACRer = null;
     private DataDispatcher dataDispatcher = null;
+    private NioSockSender nioSockSender = null;
     private final Lock objLock = new ReentrantLock();
 
 
@@ -26,12 +27,14 @@ public class NioSockController extends ANioController {
         mBindTcpConnectionSocks = new NioSockMap<NioSockEntity>(capacity);
         mBindUdpConnectionSocks = new NioSockMap<NioSockEntity>(capacity);
         mRemoteTcpSocks = new NioSockMap<NioSockEntity>(capacity);
-        mPool = new NioSockEntityPool(poolCapacity, this);
+        mReadPool = new NioSockEntityPool(poolCapacity, this);
+        mWritePool = new NioSockEntityPool(poolCapacity, this);
         mBindPool = new NioSockEntityPool(bindPoolCapacity, this);//handle, better way?
         mRemoteTcpReceiveQueue = new LinkedList<NioSockEntity>();
         mRemoteUdpReceiveQueue = new LinkedList<NioSockEntity>();
         mBindTcpReceiveQueue = new LinkedList<NioSockEntity>();
         mBindUdpReceiveQueue = new LinkedList<NioSockEntity>();
+        mSendQueue = new LinkedList<NioSockEntity>();
     }
 
     public NioSockController(int capacity, int poolCapacity, int bindPoolCapacity) {
@@ -44,12 +47,14 @@ public class NioSockController extends ANioController {
         mBindTcpConnectionSocks = new NioSockMap<NioSockEntity>(capacity);
         mBindUdpConnectionSocks = new NioSockMap<NioSockEntity>(capacity);
         mRemoteTcpSocks = new NioSockMap<NioSockEntity>(capacity);
-        mPool = new NioSockEntityPool(poolCapacity, this);
+        mReadPool = new NioSockEntityPool(poolCapacity, this);
+        mWritePool = new NioSockEntityPool(poolCapacity, this);
         mBindPool = new NioSockEntityPool(bindPoolCapacity, this);//handle, better way?
         mRemoteTcpReceiveQueue = new LinkedList<NioSockEntity>();
         mRemoteUdpReceiveQueue = new LinkedList<NioSockEntity>();
         mBindTcpReceiveQueue = new LinkedList<NioSockEntity>();
         mBindUdpReceiveQueue = new LinkedList<NioSockEntity>();
+        mSendQueue = new LinkedList<NioSockEntity>();
     }
 
     @Override
@@ -62,14 +67,14 @@ public class NioSockController extends ANioController {
 
         nioSockACRer = new NioSockACRer();
         nioSockACRer.mSelector = mSelector;
-        nioSockACRer.mPool = mPool;
+        nioSockACRer.mPool = mReadPool;
         nioSockACRer.isRun = true;
         nioSockACRer.exceptionMsgEvent = exceptionMsgEvent;
         nioSockACRer.operationStateEvent = operationStateEvent;
         nioSockACRer.start();
 
         dataDispatcher = new DataDispatcher();
-        dataDispatcher.mPool = mPool;
+        dataDispatcher.mPool = mReadPool;
         dataDispatcher.mBindTcpReceiveQueue = mBindTcpReceiveQueue;
         dataDispatcher.mBindUdpReceiveQueue = mBindUdpReceiveQueue;
         dataDispatcher.mRemoteTcpReceiveQueue = mRemoteTcpReceiveQueue;
@@ -78,6 +83,14 @@ public class NioSockController extends ANioController {
         dataDispatcher.serviceDataEvent = serviceDataEvent;
         dataDispatcher.isRun = true;
         dataDispatcher.start();
+
+        nioSockSender = new NioSockSender();
+        nioSockSender.isRun = true;
+        nioSockSender.mPool = mWritePool;
+        nioSockSender.sendCache = mSendQueue;
+        nioSockSender.start();
+
+
     }
 
 
@@ -129,10 +142,9 @@ public class NioSockController extends ANioController {
             objLock.tryLock(1, TimeUnit.SECONDS);
 
 
-            NioSockEntity removeEntity = mBindTcpServiceSocks.removeChannel(bindPort+"");
+            NioSockEntity removeEntity = mBindTcpServiceSocks.removeChannel(bindPort + "");
 
-            if (removeEntity != null && removeEntity.tcpChannelServer != null)
-            {
+            if (removeEntity != null && removeEntity.tcpChannelServer != null) {
                 removeEntity.tcpChannelServer.close();
 
                 mBindPool.recovery(removeEntity);
@@ -160,7 +172,7 @@ public class NioSockController extends ANioController {
 
             Collection<NioSockEntity> collection = mBindTcpServiceSocks.getChannels();
 
-            for (NioSockEntity removeEntity: collection) {
+            for (NioSockEntity removeEntity : collection) {
                 if (removeEntity != null && removeEntity.tcpChannelServer != null) {
                     removeEntity.tcpChannelServer.close();
 
@@ -191,8 +203,7 @@ public class NioSockController extends ANioController {
 
             NioSockEntity removeEntity = mRemoteTcpSocks.removeChannel(ip + ":" + port);
 
-            if (removeEntity != null && removeEntity.tcpChannel != null)
-            {
+            if (removeEntity != null && removeEntity.tcpChannel != null) {
                 removeEntity.tcpChannel.close();
 
                 mBindPool.recovery(removeEntity);
@@ -218,7 +229,7 @@ public class NioSockController extends ANioController {
 
             Collection<NioSockEntity> collection = mRemoteTcpSocks.getChannels();
 
-            for (NioSockEntity removeEntity: collection) {
+            for (NioSockEntity removeEntity : collection) {
                 if (removeEntity != null && removeEntity.tcpChannel != null) {
                     removeEntity.tcpChannel.close();
 
@@ -284,10 +295,9 @@ public class NioSockController extends ANioController {
             objLock.tryLock(1, TimeUnit.SECONDS);
 
 
-            NioSockEntity removeEntity = mBindUdpServiceSocks.removeChannel(bindPort+"");
+            NioSockEntity removeEntity = mBindUdpServiceSocks.removeChannel(bindPort + "");
 
-            if (removeEntity != null && removeEntity.udpChannel != null)
-            {
+            if (removeEntity != null && removeEntity.udpChannel != null) {
                 removeEntity.udpChannel.close();
 
                 mBindPool.recovery(removeEntity);
@@ -315,7 +325,7 @@ public class NioSockController extends ANioController {
 
             Collection<NioSockEntity> collection = mBindUdpServiceSocks.getChannels();
 
-            for (NioSockEntity removeEntity: collection) {
+            for (NioSockEntity removeEntity : collection) {
                 if (removeEntity != null && removeEntity.udpChannel != null) {
                     removeEntity.udpChannel.close();
 
@@ -334,7 +344,6 @@ public class NioSockController extends ANioController {
             objLock.unlock();
         }
     }
-
 
 
     @Override
@@ -431,8 +440,7 @@ public class NioSockController extends ANioController {
 
             NioSockEntity removeEntity = mBindTcpConnectionSocks.removeChannel(bindPort + "");
 
-            if (removeEntity != null && removeEntity.tcpChannel != null)
-            {
+            if (removeEntity != null && removeEntity.tcpChannel != null) {
                 removeEntity.tcpChannel.close();
 
                 mBindPool.recovery(removeEntity);
@@ -458,7 +466,7 @@ public class NioSockController extends ANioController {
 
             Collection<NioSockEntity> collection = mBindTcpConnectionSocks.getChannels();
 
-            for (NioSockEntity removeEntity: collection) {
+            for (NioSockEntity removeEntity : collection) {
                 if (removeEntity != null && removeEntity.tcpChannel != null) {
                     removeEntity.tcpChannel.close();
 
@@ -577,8 +585,7 @@ public class NioSockController extends ANioController {
 
             NioSockEntity removeEntity = mBindUdpConnectionSocks.removeChannel(bindPort + "");
 
-            if (removeEntity != null && removeEntity.udpChannel != null)
-            {
+            if (removeEntity != null && removeEntity.udpChannel != null) {
                 removeEntity.udpChannel.close();
 
                 mBindPool.recovery(removeEntity);
@@ -604,7 +611,7 @@ public class NioSockController extends ANioController {
 
             Collection<NioSockEntity> collection = mBindUdpConnectionSocks.getChannels();
 
-            for (NioSockEntity removeEntity: collection) {
+            for (NioSockEntity removeEntity : collection) {
                 if (removeEntity != null && removeEntity.udpChannel != null) {
                     removeEntity.udpChannel.close();
 
@@ -625,17 +632,142 @@ public class NioSockController extends ANioController {
     }
 
     @Override
+    public SocketChannel getConnectionSocketChannel(int bindPort) {
+        // this interface give out to control, must be locked.
+        SocketChannel channel = null;
+        try {
+            objLock.tryLock(1, TimeUnit.SECONDS);
+
+
+            NioSockEntity nioSockEntity = mBindTcpConnectionSocks.getChannel(bindPort + "");
+            if (nioSockEntity != null) {
+                channel = nioSockEntity.tcpChannel;
+            }
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            //callback?
+        } finally {
+            objLock.unlock();
+        }
+
+        return channel;
+    }
+
+    @Override
+    public SocketChannel getRemoteConnectionSocketChannel(String host, int port) {
+        // this interface give out to control, must be locked.
+        SocketChannel channel = null;
+        try {
+            objLock.tryLock(1, TimeUnit.SECONDS);
+
+
+            NioSockEntity nioSockEntity = mRemoteTcpSocks.getChannel(host + ":" + port);
+            if (nioSockEntity != null) {
+                channel = nioSockEntity.tcpChannel;
+            }
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            //callback?
+        } finally {
+            objLock.unlock();
+        }
+
+        return channel;
+    }
+
+    @Override
+    public DatagramChannel getServiceDatagramChannel(int bindPort) {
+        // this interface give out to control, must be locked.
+        DatagramChannel channel = null;
+        try {
+            objLock.tryLock(1, TimeUnit.SECONDS);
+
+
+            NioSockEntity nioSockEntity = mBindUdpServiceSocks.getChannel(bindPort + "");
+            if (nioSockEntity != null) {
+                channel = nioSockEntity.udpChannel;
+            }
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            //callback?
+        } finally {
+            objLock.unlock();
+        }
+
+        return channel;
+    }
+
+    @Override
+    public DatagramChannel getConnectionDatagramChannel(int bindPort) {
+        // this interface give out to control, must be locked.
+        DatagramChannel channel = null;
+        try {
+            objLock.tryLock(1, TimeUnit.SECONDS);
+
+
+            NioSockEntity nioSockEntity = mBindUdpConnectionSocks.getChannel(bindPort + "");
+            if (nioSockEntity != null) {
+                channel = nioSockEntity.udpChannel;
+            }
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            //callback?
+        } finally {
+            objLock.unlock();
+        }
+
+        return channel;
+    }
+
+    @Override
+    public void addBufferToSend(int type, SocketChannel channel, byte[] data, int dataSize) {
+
+        NioSockEntity nioSockEntity = mWritePool.obtain();
+
+        if (nioSockEntity != null) {
+            nioSockEntity.channelType = type;
+            nioSockEntity.tcpChannel = channel;
+            nioSockEntity.setBuffer(data, dataSize);
+
+            mSendQueue.add(nioSockEntity);
+        }
+
+    }
+
+    @Override
+    public void addBufferToSend(int type, DatagramChannel channel, byte[] data, int dataSize, String host, int port) {
+        NioSockEntity nioSockEntity = mWritePool.obtain();
+
+        if (nioSockEntity != null) {
+            nioSockEntity.channelType = type;
+            nioSockEntity.udpChannel = channel;
+            nioSockEntity.host = host;
+            nioSockEntity.port = port;
+            nioSockEntity.setBuffer(data, dataSize);
+
+            mSendQueue.add(nioSockEntity);
+        }
+    }
+
+    @Override
     public void destroyController() {
 
-        if(nioSockACRer != null)
-        {
+        if (nioSockSender != null) {
+            nioSockSender.isRun = false;
+        }
+
+
+        if (nioSockACRer != null) {
             nioSockACRer.isRun = false;
             mSelector.wakeup();
         }
 
 
-        if (dataDispatcher != null)
-        {
+        if (dataDispatcher != null) {
             dataDispatcher.isRun = false;
         }
 
@@ -648,8 +780,10 @@ public class NioSockController extends ANioController {
         mRemoteUdpReceiveQueue.clear();
         mBindTcpReceiveQueue.clear();
         mBindUdpReceiveQueue.clear();
+        mSendQueue.clear();
         mBindPool.onDestroy();
-        mPool.onDestroy();
+        mReadPool.onDestroy();
+        mWritePool.onDestroy();
         try {
             mSelector.close();
         } catch (IOException e) {
@@ -661,19 +795,17 @@ public class NioSockController extends ANioController {
 
     @Override
     public void stillbirthSocket(NioSockEntity entity) {
-            switch (entity.channelType)
-            {
-                case NioTypes.TYPE_TCP_CLIENT:
-                {
-                    try {
-                        entity.tcpChannel.close();
-                        //callback?
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    break;
+        switch (entity.channelType) {
+            case NioTypes.TYPE_TCP_CLIENT: {
+                try {
+                    entity.tcpChannel.close();
+                    //callback?
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
+                break;
             }
+        }
     }
 
     @Override

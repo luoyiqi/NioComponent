@@ -64,6 +64,16 @@ public class NioSockMap<T> {
         return t;
     }
 
+    public T getChannel(String key)
+    {
+        T t = null;
+        if (mSockMap.containsKey(key)) {
+            t = mSockMap.get(key);
+        }
+
+        return t;
+    }
+
     public Collection<T> getChannels(){return  mSockMap.values();}
 
     public boolean isEmpty()

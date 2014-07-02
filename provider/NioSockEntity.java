@@ -93,6 +93,21 @@ public class NioSockEntity {
 
     }
 
+
+    public void setBuffer(byte[] buffer)
+    {
+        cache.put(buffer);
+        cache.flip();
+        bufferSize = buffer.length;
+    }
+
+    public void setBuffer(byte[] buffer, int bufferSize)
+    {
+        cache.put(buffer, 0, bufferSize);
+        cache.flip();
+        this.bufferSize = bufferSize;
+    }
+
     public void setBuffer(ByteBuffer byteBuffer)
     {
         cache.put(byteBuffer);
@@ -106,6 +121,11 @@ public class NioSockEntity {
         outputStream.write(cache.array(), 0, bufferSize);//specify offset and length, or not, toByeArray will be cache size, not bufferSize.
 
         return outputStream.toByteArray();
+    }
+
+    public ByteBuffer getSendByteBuffer()
+    {
+        return cache;
     }
 
     public void decodeSocketAddress(SocketChannel channel)

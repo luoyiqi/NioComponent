@@ -1,6 +1,9 @@
 package NioComponent.provider;
 
 
+import java.nio.channels.DatagramChannel;
+import java.nio.channels.SocketChannel;
+
 /**
  * Created by charlown on 14-6-25.
  */
@@ -184,11 +187,113 @@ public class NioSocketProvider {
     }
 
 
+    public SocketChannel getTcpConnectionChannel(int bindPort) throws NullPointerException {
+
+        SocketChannel channel;
+
+
+        if (controller != null)
+        {
+            channel = controller.getConnectionSocketChannel(bindPort);
+        }
+        else
+        {
+            throw new NullPointerException("NioSocketProvider no init.");
+        }
+
+        if (channel == null)
+            throw  new NullPointerException("no channel of bindPort.");
+
+
+        return channel;
+
+    }
+
+    public DatagramChannel getUdpConnectionChannel(int bindPort) throws NullPointerException {
+
+        DatagramChannel channel;
+
+
+        if (controller != null)
+        {
+            channel = controller.getConnectionDatagramChannel(bindPort);
+        }
+        else
+        {
+            throw new NullPointerException("NioSocketProvider no init.");
+        }
+
+        if (channel == null)
+            throw  new NullPointerException("no channel of bindPort.");
+
+
+        return channel;
+
+    }
+
+    public SocketChannel getRemoteTcpConnectionChannel(String host, int port) throws NullPointerException {
+
+        SocketChannel channel;
+
+
+        if (controller != null)
+        {
+            channel = controller.getRemoteConnectionSocketChannel(host, port);
+        }
+        else
+        {
+            throw new NullPointerException("NioSocketProvider no init.");
+        }
+
+        if (channel == null)
+            throw  new NullPointerException("no channel of host, port.");
+
+
+        return channel;
+
+    }
+
+    public DatagramChannel getUdpServiceChannel(int bindPort) throws NullPointerException {
+
+        DatagramChannel channel;
+
+
+        if (controller != null)
+        {
+            channel = controller.getServiceDatagramChannel(bindPort);
+        }
+        else
+        {
+            throw new NullPointerException("NioSocketProvider no init.");
+        }
+
+        if (channel == null)
+            throw  new NullPointerException("no channel of bindPort.");
+
+
+        return channel;
+
+    }
+
+
+    public  void addBufferToSend(int type, SocketChannel channel, byte[] data, int dataSize)
+    {
+        if (controller != null)
+            controller.addBufferToSend(type, channel, data, dataSize);
+    }
+    public void addBufferToSend(int type, DatagramChannel channel, byte[] data, int dataSize, String host, int port)
+    {
+
+        if (controller != null)
+            controller.addBufferToSend(type, channel, data, dataSize, host, port);
+    }
+
+
+
     public void destroyController() {
         if (controller != null) {
             controller.destroyController();
         }
     }
-
 
 }
