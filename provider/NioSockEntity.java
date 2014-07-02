@@ -102,11 +102,9 @@ public class NioSockEntity {
 
     public byte[] getBuffer()
     {
-        try {
-            outputStream.write(cache.array());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
+        outputStream.write(cache.array(), 0, bufferSize);//specify offset and length, or not, toByeArray will be cache size, not bufferSize.
+
         return outputStream.toByteArray();
     }
 

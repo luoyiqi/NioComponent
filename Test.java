@@ -13,7 +13,9 @@ public class Test {
         INotifyServiceDataHandler serviceDataHandler = new INotifyServiceDataHandler() {
             @Override
             public void notifyRemoteReceiveBuffer(int bindPort, String host, int port, final  byte[] buffer, int bufferSize) {
-                System.out.println("on port: " + bindPort + " receive client: " + host + ":" + port + ", data, data size = " + bufferSize);
+                System.out.println("buffer size = " + buffer.length);
+                String str = new String(buffer);
+                System.out.println("on port: " + bindPort + " receive client: " + host + ":" + port + ", data: " + str +", data size = " + bufferSize);
 
             }
         };
@@ -22,7 +24,9 @@ public class Test {
 
             @Override
             public void notifyBindReceiveBuffer(int bindPort, String from, int port, byte[] buffer, int bufferSize) {
-                System.out.println("on port: " + bindPort + " from client: " + from + ":" + port + ", data, data size = " + bufferSize);
+                System.out.println("buffer size = " + buffer.length);
+                String str = new String(buffer);
+                System.out.println("on port: " + bindPort + " from client: " + from + ":" + port + ", data: "+ str +", data size = " + bufferSize);
             }
         };
 

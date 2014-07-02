@@ -108,7 +108,7 @@ public class NioSocketProvider {
             if (controller != null) {
                 controller.removeRemoteTcpConnection(host, port);
             }
-        } 
+        }
     }
 
     public void stopAllRemoteConnection(int type) {
