@@ -16,7 +16,6 @@ public abstract class ANioController implements NioSockEntity.INioSockEventHandl
     protected NioSockMap<NioSockEntity> mBindUdpServiceSocks;
     protected NioSockMap<NioSockEntity> mBindUdpConnectionSocks;
     protected NioSockMap<NioSockEntity> mRemoteTcpSocks;
-    protected NioSockMap<NioSockEntity> mRemoteUdpSocks;
     protected NioSockEntityPool mPool, mBindPool;
     protected Queue<NioSockEntity> mBindTcpReceiveQueue;
     protected Queue<NioSockEntity> mBindUdpReceiveQueue;
@@ -58,8 +57,6 @@ public abstract class ANioController implements NioSockEntity.INioSockEventHandl
     public abstract boolean createUdpService(int bindPort);
     public abstract void removeUdpService(int bindPort);
     public abstract void removeAllUdpService();
-    public abstract void removeRemoteUdpConnection(String ip, int port);
-    public abstract void removeAllRemoteUdpConnection();
 
 
     public abstract boolean createTcpConnection(String host, int port);//FIXME: need to return allocate port?

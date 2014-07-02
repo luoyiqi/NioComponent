@@ -26,7 +26,6 @@ public class NioSockController extends ANioController {
         mBindTcpConnectionSocks = new NioSockMap<NioSockEntity>(capacity);
         mBindUdpConnectionSocks = new NioSockMap<NioSockEntity>(capacity);
         mRemoteTcpSocks = new NioSockMap<NioSockEntity>(capacity);
-        mRemoteUdpSocks = new NioSockMap<NioSockEntity>(capacity);
         mPool = new NioSockEntityPool(poolCapacity, this);
         mBindPool = new NioSockEntityPool(bindPoolCapacity, this);//handle, better way?
         mRemoteTcpReceiveQueue = new LinkedList<NioSockEntity>();
@@ -45,7 +44,6 @@ public class NioSockController extends ANioController {
         mBindTcpConnectionSocks = new NioSockMap<NioSockEntity>(capacity);
         mBindUdpConnectionSocks = new NioSockMap<NioSockEntity>(capacity);
         mRemoteTcpSocks = new NioSockMap<NioSockEntity>(capacity);
-        mRemoteUdpSocks = new NioSockMap<NioSockEntity>(capacity);
         mPool = new NioSockEntityPool(poolCapacity, this);
         mBindPool = new NioSockEntityPool(bindPoolCapacity, this);//handle, better way?
         mRemoteTcpReceiveQueue = new LinkedList<NioSockEntity>();
@@ -337,61 +335,7 @@ public class NioSockController extends ANioController {
         }
     }
 
-    @Override
-    public void removeRemoteUdpConnection(String ip, int port) {
-        // this interface give out to control, must be locked.
-        try {
-            objLock.tryLock(1, TimeUnit.SECONDS);
 
-
-            NioSockEntity removeEntity = mRemoteUdpSocks.removeChannel(ip + ":" + port);
-
-            if (removeEntity != null && removeEntity.udpChannel != null)
-            {
-                removeEntity.udpChannel.close();
-
-                mBindPool.recovery(removeEntity);
-            }
-
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            //callback?
-        } catch (IOException e) {
-            e.printStackTrace();
-            //callback?
-        } finally {
-            objLock.unlock();
-        }
-    }
-
-    @Override
-    public void removeAllRemoteUdpConnection() {
-        // this interface give out to control, must be locked.
-        try {
-            objLock.tryLock(1, TimeUnit.SECONDS);
-
-
-            Collection<NioSockEntity> collection = mRemoteUdpSocks.getChannels();
-
-            for (NioSockEntity removeEntity: collection) {
-                if (removeEntity != null && removeEntity.udpChannel != null) {
-                    removeEntity.udpChannel.close();
-
-                    mBindPool.recovery(removeEntity);
-                }
-            }
-            mRemoteUdpSocks.clear();
-
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            //callback?
-        } catch (IOException e) {
-            e.printStackTrace();
-            //callback?
-        } finally {
-            objLock.unlock();
-        }
-    }
 
     @Override
     public boolean createTcpConnection(String host, int port) {
@@ -698,7 +642,6 @@ public class NioSockController extends ANioController {
         removeAllTcpService();
         removeAllUdpService();
         removeAllRemoteTcpConnection();
-        removeAllRemoteUdpConnection();
         removeAllTcpConnection();
         removeAllUdpConnection();
         mRemoteTcpReceiveQueue.clear();
@@ -751,14 +694,6 @@ public class NioSockController extends ANioController {
                 //callback?
                 break;
             }
-            case NioTypes.TYPE_UDP_SERVER: {
-                //read client add or update
-                //better way?
-                String key = entity.host + ":" + entity.port;
-                boolean isSuc = mRemoteUdpSocks.addChannel(key, entity);
-                //callback?
-                break;
-            }
         }
     }
 
@@ -792,22 +727,6 @@ public class NioSockController extends ANioController {
                         removeEntity.tcpChannel.close();
                     } else {
                         entity.tcpChannel.close();
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                //callback?
-                break;
-            }
-            case NioTypes.TYPE_UDP_SERVER: {
-                //read client add or update
-                String key = entity.host + ":" + entity.port;
-                NioSockEntity removeEntity = mRemoteUdpSocks.removeChannel(key);
-                try {
-                    if (removeEntity != null && removeEntity.udpChannel != null) {
-                        removeEntity.udpChannel.close();
-                    } else {
-                        entity.udpChannel.close();
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
