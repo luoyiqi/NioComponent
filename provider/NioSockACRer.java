@@ -61,6 +61,9 @@ public class NioSockACRer extends Thread {
                     sleep(100); //has a good way to instead of ?
                 }
 
+                if (!mSelector.isOpen())
+                    continue;
+                
                 Set<SelectionKey> selectionKeySet = mSelector.selectedKeys();
                 Iterator<SelectionKey> iterator = selectionKeySet.iterator();
 
