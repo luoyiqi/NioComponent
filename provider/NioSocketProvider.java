@@ -142,6 +142,22 @@ public class NioSocketProvider {
 
         }
 
+        return isSuc;
+    }
+
+    public boolean createConnection(int type, int bindPort, String host, int port) {
+        boolean isSuc = false;
+
+
+        if (controller != null) {
+
+            if (type == NioTypes.TYPE_TCP_CLIENT) {
+                isSuc = controller.createTcpConnection(bindPort, host, port);
+            } else if (type == NioTypes.TYPE_UDP_CLIENT) {
+                isSuc = controller.createUdpConnection(bindPort, host, port);
+            }
+
+        }
 
         return isSuc;
     }

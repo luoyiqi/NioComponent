@@ -3,7 +3,9 @@ package NioComponent.provider;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.*;
+import java.util.Collection;
 import java.util.LinkedList;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -123,21 +125,119 @@ public class NioSockController extends ANioController {
     @Override
     public void removeTcpService(int bindPort) {
 
+        // this interface give out to control, must be locked.
+
+        try {
+            objLock.tryLock(1, TimeUnit.SECONDS);
+
+
+            NioSockEntity removeEntity = mBindTcpServiceSocks.removeChannel(bindPort+"");
+
+            if (removeEntity != null && removeEntity.tcpChannelServer != null)
+            {
+                removeEntity.tcpChannelServer.close();
+
+                mBindPool.recovery(removeEntity);
+            }
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            //callback?
+        } catch (IOException e) {
+            e.printStackTrace();
+            //callback?
+        } finally {
+            objLock.unlock();
+        }
+
     }
 
     @Override
     public void removeAllTcpService() {
+        // this interface give out to control, must be locked.
+
+        try {
+            objLock.tryLock(1, TimeUnit.SECONDS);
+
+
+            Collection<NioSockEntity> collection = mBindTcpServiceSocks.getChannels();
+
+            for (NioSockEntity removeEntity: collection) {
+                if (removeEntity != null && removeEntity.tcpChannelServer != null) {
+                    removeEntity.tcpChannelServer.close();
+
+                    mBindPool.recovery(removeEntity);
+                }
+            }
+            mBindTcpServiceSocks.clear();
+
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            //callback?
+        } catch (IOException e) {
+            e.printStackTrace();
+            //callback?
+        } finally {
+            objLock.unlock();
+        }
 
     }
 
     @Override
     public void removeRemoteTcpConnection(String ip, int port) {
+        // this interface give out to control, must be locked.
+        try {
+            objLock.tryLock(1, TimeUnit.SECONDS);
 
+
+            NioSockEntity removeEntity = mRemoteTcpSocks.removeChannel(ip + ":" + port);
+
+            if (removeEntity != null && removeEntity.tcpChannel != null)
+            {
+                removeEntity.tcpChannel.close();
+
+                mBindPool.recovery(removeEntity);
+            }
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            //callback?
+        } catch (IOException e) {
+            e.printStackTrace();
+            //callback?
+        } finally {
+            objLock.unlock();
+        }
     }
 
     @Override
     public void removeAllRemoteTcpConnection() {
+        // this interface give out to control, must be locked.
+        try {
+            objLock.tryLock(1, TimeUnit.SECONDS);
 
+
+            Collection<NioSockEntity> collection = mRemoteTcpSocks.getChannels();
+
+            for (NioSockEntity removeEntity: collection) {
+                if (removeEntity != null && removeEntity.tcpChannel != null) {
+                    removeEntity.tcpChannel.close();
+
+                    mBindPool.recovery(removeEntity);
+                }
+            }
+            mRemoteTcpSocks.clear();
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            //callback?
+        } catch (IOException e) {
+            e.printStackTrace();
+            //callback?
+        } finally {
+            objLock.unlock();
+        }
     }
 
     @Override
@@ -181,22 +281,116 @@ public class NioSockController extends ANioController {
 
     @Override
     public void removeUdpService(int bindPort) {
+        // this interface give out to control, must be locked.
+        try {
+            objLock.tryLock(1, TimeUnit.SECONDS);
+
+
+            NioSockEntity removeEntity = mBindUdpServiceSocks.removeChannel(bindPort+"");
+
+            if (removeEntity != null && removeEntity.udpChannel != null)
+            {
+                removeEntity.udpChannel.close();
+
+                mBindPool.recovery(removeEntity);
+            }
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            //callback?
+        } catch (IOException e) {
+            e.printStackTrace();
+            //callback?
+        } finally {
+            objLock.unlock();
+        }
 
     }
 
     @Override
     public void removeAllUdpService() {
+        // this interface give out to control, must be locked.
 
+        try {
+            objLock.tryLock(1, TimeUnit.SECONDS);
+
+
+            Collection<NioSockEntity> collection = mBindUdpServiceSocks.getChannels();
+
+            for (NioSockEntity removeEntity: collection) {
+                if (removeEntity != null && removeEntity.udpChannel != null) {
+                    removeEntity.udpChannel.close();
+
+                    mBindPool.recovery(removeEntity);
+                }
+            }
+            mBindUdpServiceSocks.clear();
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            //callback?
+        } catch (IOException e) {
+            e.printStackTrace();
+            //callback?
+        } finally {
+            objLock.unlock();
+        }
     }
 
     @Override
     public void removeRemoteUdpConnection(String ip, int port) {
+        // this interface give out to control, must be locked.
+        try {
+            objLock.tryLock(1, TimeUnit.SECONDS);
 
+
+            NioSockEntity removeEntity = mRemoteUdpSocks.removeChannel(ip + ":" + port);
+
+            if (removeEntity != null && removeEntity.udpChannel != null)
+            {
+                removeEntity.udpChannel.close();
+
+                mBindPool.recovery(removeEntity);
+            }
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            //callback?
+        } catch (IOException e) {
+            e.printStackTrace();
+            //callback?
+        } finally {
+            objLock.unlock();
+        }
     }
 
     @Override
     public void removeAllRemoteUdpConnection() {
+        // this interface give out to control, must be locked.
+        try {
+            objLock.tryLock(1, TimeUnit.SECONDS);
 
+
+            Collection<NioSockEntity> collection = mRemoteUdpSocks.getChannels();
+
+            for (NioSockEntity removeEntity: collection) {
+                if (removeEntity != null && removeEntity.udpChannel != null) {
+                    removeEntity.udpChannel.close();
+
+                    mBindPool.recovery(removeEntity);
+                }
+            }
+            mRemoteUdpSocks.clear();
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            //callback?
+        } catch (IOException e) {
+            e.printStackTrace();
+            //callback?
+        } finally {
+            objLock.unlock();
+        }
     }
 
     @Override
@@ -240,15 +434,104 @@ public class NioSockController extends ANioController {
         return isSuc;
     }
 
+    @Override
+    public boolean createTcpConnection(int bindPort, String host, int port) {
+        boolean isSuc = false;
+
+        NioSockEntity nioSockEntity = mBindPool.obtain();
+
+        if (nioSockEntity != null) {
+            nioSockEntity.channelType = NioTypes.TYPE_TCP_CLIENT;// this is important, as case for thread
+            nioSockEntity.host = host;
+            nioSockEntity.port = port;
+
+            SocketChannel channel = null;
+
+            try {
+                channel = SocketChannel.open();
+                nioSockEntity.tcpChannel = channel;
+                channel.configureBlocking(false);
+                channel.socket().bind(new InetSocketAddress(bindPort));
+                channel.connect(new InetSocketAddress(host, port));
+
+
+                mSelector.wakeup();
+                channel.register(mSelector, SelectionKey.OP_CONNECT, nioSockEntity);
+
+                isSuc = true;
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                //callback?
+                if (channel != null) {
+                    try {
+                        channel.close();
+                    } catch (IOException e1) {
+                        e1.printStackTrace();
+                    }
+                }
+                mBindPool.recovery(nioSockEntity);
+            }
+        }
+
+        return isSuc;
+    }
+
 
     @Override
     public void removeTcpConnection(int bindPort) {
+        // this interface give out to control, must be locked.
+        try {
+            objLock.tryLock(1, TimeUnit.SECONDS);
 
+
+            NioSockEntity removeEntity = mBindTcpConnectionSocks.removeChannel(bindPort + "");
+
+            if (removeEntity != null && removeEntity.tcpChannel != null)
+            {
+                removeEntity.tcpChannel.close();
+
+                mBindPool.recovery(removeEntity);
+            }
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            //callback?
+        } catch (IOException e) {
+            e.printStackTrace();
+            //callback?
+        } finally {
+            objLock.unlock();
+        }
     }
 
     @Override
     public void removeAllTcpConnection() {
+        // this interface give out to control, must be locked.
+        try {
+            objLock.tryLock(1, TimeUnit.SECONDS);
 
+
+            Collection<NioSockEntity> collection = mBindTcpConnectionSocks.getChannels();
+
+            for (NioSockEntity removeEntity: collection) {
+                if (removeEntity != null && removeEntity.tcpChannel != null) {
+                    removeEntity.tcpChannel.close();
+
+                    mBindPool.recovery(removeEntity);
+                }
+            }
+            mBindTcpConnectionSocks.clear();
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            //callback?
+        } catch (IOException e) {
+            e.printStackTrace();
+            //callback?
+        } finally {
+            objLock.unlock();
+        }
     }
 
     @Override
@@ -296,26 +579,158 @@ public class NioSockController extends ANioController {
         return isSuc;
     }
 
+    @Override
+    public boolean createUdpConnection(int bindPort, String host, int port) {
+        boolean isSuc = false;
+
+        NioSockEntity nioSockEntity = mBindPool.obtain();
+
+        if (nioSockEntity != null) {
+            nioSockEntity.channelType = NioTypes.TYPE_UDP_CLIENT;// this is important, as case for thread
+            nioSockEntity.host = host;
+            nioSockEntity.port = port;
+            nioSockEntity.bindPort = bindPort;
+
+            DatagramChannel channel = null;
+
+            try {
+                channel = DatagramChannel.open();
+                nioSockEntity.udpChannel = channel;
+                channel.configureBlocking(false);
+                channel.socket().bind(new InetSocketAddress(bindPort));
+                channel.connect(new InetSocketAddress(host, port));
+
+                mSelector.wakeup();
+                channel.register(mSelector, SelectionKey.OP_READ, nioSockEntity);
+
+
+                isSuc = mBindUdpConnectionSocks.addChannel(nioSockEntity.bindPort + "", nioSockEntity);
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                //callback?
+                if (channel != null) {
+                    try {
+                        channel.close();
+                    } catch (IOException e1) {
+                        e1.printStackTrace();
+                    }
+                }
+                mBindPool.recovery(nioSockEntity);
+            }
+        }
+
+        return isSuc;
+    }
+
 
     @Override
     public void removeUdpConnection(int bindPort) {
+        // this interface give out to control, must be locked.
+        try {
+            objLock.tryLock(1, TimeUnit.SECONDS);
 
+
+            NioSockEntity removeEntity = mBindUdpConnectionSocks.removeChannel(bindPort + "");
+
+            if (removeEntity != null && removeEntity.udpChannel != null)
+            {
+                removeEntity.udpChannel.close();
+
+                mBindPool.recovery(removeEntity);
+            }
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            //callback?
+        } catch (IOException e) {
+            e.printStackTrace();
+            //callback?
+        } finally {
+            objLock.unlock();
+        }
     }
 
     @Override
     public void removeAllUdpConnection() {
+        // this interface give out to control, must be locked.
+        try {
+            objLock.tryLock(1, TimeUnit.SECONDS);
 
+
+            Collection<NioSockEntity> collection = mBindUdpConnectionSocks.getChannels();
+
+            for (NioSockEntity removeEntity: collection) {
+                if (removeEntity != null && removeEntity.udpChannel != null) {
+                    removeEntity.udpChannel.close();
+
+                    mBindPool.recovery(removeEntity);
+                }
+            }
+            mBindUdpConnectionSocks.clear();
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            //callback?
+        } catch (IOException e) {
+            e.printStackTrace();
+            //callback?
+        } finally {
+            objLock.unlock();
+        }
     }
 
     @Override
     public void destroyController() {
+
+        if(nioSockACRer != null)
+        {
+            nioSockACRer.isRun = false;
+            mSelector.wakeup();
+        }
+
+
+        if (dataDispatcher != null)
+        {
+            dataDispatcher.isRun = false;
+        }
+
+        removeAllTcpService();
+        removeAllUdpService();
+        removeAllRemoteTcpConnection();
+        removeAllRemoteUdpConnection();
+        removeAllTcpConnection();
+        removeAllUdpConnection();
+        mRemoteTcpReceiveQueue.clear();
+        mRemoteUdpReceiveQueue.clear();
+        mBindTcpReceiveQueue.clear();
+        mBindUdpReceiveQueue.clear();
+        mBindPool.onDestroy();
+        mPool.onDestroy();
+        try {
+            mSelector.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
     }
 
 
     @Override
     public void stillbirthSocket(NioSockEntity entity) {
-
+            switch (entity.channelType)
+            {
+                case NioTypes.TYPE_TCP_CLIENT:
+                {
+                    try {
+                        entity.tcpChannel.close();
+                        //callback?
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    break;
+                }
+            }
     }
 
     @Override

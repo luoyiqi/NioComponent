@@ -60,7 +60,7 @@ public class Test {
         System.out.println("sever " + isSuc);
         isSuc = nioSocketProvider.createServer(NioTypes.TYPE_TCP_SERVER, 10087);
         System.out.println("sever " + isSuc);*/
-        isSuc = nioSocketProvider.createConnection(NioTypes.TYPE_UDP_CLIENT, "192.168.3.8", 10088);
+        isSuc = nioSocketProvider.createConnection(NioTypes.TYPE_TCP_CLIENT, 10087, "192.168.3.8", 10088);
 
 
     }
