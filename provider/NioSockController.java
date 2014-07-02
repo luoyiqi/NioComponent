@@ -5,6 +5,7 @@ import java.net.InetSocketAddress;
 import java.nio.channels.*;
 import java.util.Collection;
 import java.util.LinkedList;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -30,11 +31,11 @@ public class NioSockController extends ANioController {
         mReadPool = new NioSockEntityPool(poolCapacity, this);
         mWritePool = new NioSockEntityPool(poolCapacity, this);
         mBindPool = new NioSockEntityPool(bindPoolCapacity, this);//handle, better way?
-        mRemoteTcpReceiveQueue = new LinkedList<NioSockEntity>();
-        mRemoteUdpReceiveQueue = new LinkedList<NioSockEntity>();
-        mBindTcpReceiveQueue = new LinkedList<NioSockEntity>();
-        mBindUdpReceiveQueue = new LinkedList<NioSockEntity>();
-        mSendQueue = new LinkedList<NioSockEntity>();
+        mRemoteTcpReceiveQueue = new ArrayBlockingQueue<NioSockEntity>(capacity);
+        mRemoteUdpReceiveQueue = new ArrayBlockingQueue<NioSockEntity>(capacity);
+        mBindTcpReceiveQueue = new ArrayBlockingQueue<NioSockEntity>(capacity);
+        mBindUdpReceiveQueue = new ArrayBlockingQueue<NioSockEntity>(capacity);
+        mSendQueue = new ArrayBlockingQueue<NioSockEntity>(capacity);
     }
 
     public NioSockController(int capacity, int poolCapacity, int bindPoolCapacity) {
@@ -50,11 +51,11 @@ public class NioSockController extends ANioController {
         mReadPool = new NioSockEntityPool(poolCapacity, this);
         mWritePool = new NioSockEntityPool(poolCapacity, this);
         mBindPool = new NioSockEntityPool(bindPoolCapacity, this);//handle, better way?
-        mRemoteTcpReceiveQueue = new LinkedList<NioSockEntity>();
-        mRemoteUdpReceiveQueue = new LinkedList<NioSockEntity>();
-        mBindTcpReceiveQueue = new LinkedList<NioSockEntity>();
-        mBindUdpReceiveQueue = new LinkedList<NioSockEntity>();
-        mSendQueue = new LinkedList<NioSockEntity>();
+        mRemoteTcpReceiveQueue = new ArrayBlockingQueue<NioSockEntity>(capacity);
+        mRemoteUdpReceiveQueue = new ArrayBlockingQueue<NioSockEntity>(capacity);
+        mBindTcpReceiveQueue = new ArrayBlockingQueue<NioSockEntity>(capacity);
+        mBindUdpReceiveQueue = new ArrayBlockingQueue<NioSockEntity>(capacity);
+        mSendQueue = new ArrayBlockingQueue<NioSockEntity>(capacity);
     }
 
     @Override
