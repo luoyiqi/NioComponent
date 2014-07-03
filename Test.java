@@ -15,6 +15,7 @@ public class Test {
     public static class TestCase
     {
         NioSocketProvider nioSocketProvider = new NioSocketProvider();
+        int allocate_port;
         INotifyServiceDataHandler serviceDataHandler = new INotifyServiceDataHandler() {
             @Override
             public void notifyRemoteReceiveBuffer(int type, int bindPort, String host, int port, final  byte[] buffer, int bufferSize) {
@@ -120,6 +121,18 @@ public class Test {
             public void notifyOperationState(int type, int operationType, boolean isSuc) {
 
             }
+
+            @Override
+            public void notifyCreateConnection(int type, boolean isSuc, String host, int port, int allocatePort) {
+                if (type == NioTypes.TYPE_TCP_CLIENT)
+                {
+                    if (isSuc)
+                    {
+                        allocate_port = allocatePort;
+                        System.out.println("connection allocate port: " + allocate_port);
+                    }
+                }
+            }
         };
 
         public TestCase()
@@ -136,8 +149,8 @@ public class Test {
         {
             nioSocketProvider.init();
 
-           // nioSocketProvider.createConnection(NioTypes.TYPE_TCP_CLIENT, 10087, "192.168.3.8", 10088);
-            nioSocketProvider.createServer(NioTypes.TYPE_TCP_SERVER, 10089);
+           nioSocketProvider.createConnection(NioTypes.TYPE_TCP_CLIENT, "192.168.3.8", 10088);
+          //  nioSocketProvider.createServer(NioTypes.TYPE_TCP_SERVER, 10089);
            // nioSocketProvider.createServer(NioTypes.TYPE_UDP_SERVER, 10090);
            // nioSocketProvider.createConnection(NioTypes.TYPE_UDP_CLIENT, 10092, "192.168.3.8", 10091);
         }

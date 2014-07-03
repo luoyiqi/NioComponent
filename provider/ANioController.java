@@ -63,14 +63,14 @@ public abstract class ANioController implements NioSockEntity.INioSockEventHandl
     public abstract void removeAllUdpService();
 
 
-    public abstract boolean createTcpConnection(String host, int port);//FIXME: need to return allocate port?
+    public abstract boolean createTcpConnection(String host, int port);
     public abstract boolean createTcpConnection(int bindPort, String host, int port);
-    public abstract void removeTcpConnection(int bindPort);//FIXME: if no input bindPort and not return port, how can know bindPort?
+    public abstract void removeTcpConnection(int bindPort);
     public abstract void removeAllTcpConnection();
 
-    public abstract boolean createUdpConnection(String host, int port);//FIXME: need to return allocate port?
+    public abstract boolean createUdpConnection(String host, int port);
     public abstract boolean createUdpConnection(int bindPort, String host, int port);
-    public abstract void removeUdpConnection(int bindPort);//FIXME: if no input bindPort and not return port, how can know bindPort?
+    public abstract void removeUdpConnection(int bindPort);
     public abstract void removeAllUdpConnection();
 
 

@@ -515,6 +515,11 @@ public class NioSockController extends ANioController {
 
                 isSuc = mBindUdpConnectionSocks.addChannel(nioSockEntity.bindPort + "", nioSockEntity);
 
+                if (operationStateEvent != null)
+                {
+                    operationStateEvent.notifyCreateConnection(NioTypes.TYPE_UDP_CLIENT, isSuc,  host, port, nioSockEntity.bindPort);
+                }
+
             } catch (IOException e) {
                 e.printStackTrace();
                 //callback?
@@ -558,6 +563,10 @@ public class NioSockController extends ANioController {
 
 
                 isSuc = mBindUdpConnectionSocks.addChannel(nioSockEntity.bindPort + "", nioSockEntity);
+                if (operationStateEvent != null)
+                {
+                    operationStateEvent.notifyCreateConnection(NioTypes.TYPE_UDP_CLIENT, isSuc,  host, port, nioSockEntity.bindPort);
+                }
 
             } catch (IOException e) {
                 e.printStackTrace();
@@ -824,6 +833,10 @@ public class NioSockController extends ANioController {
                 // local bind
                 String key = entity.bindPort + "";
                 boolean isSuc = mBindTcpConnectionSocks.addChannel(key, entity);
+                if (operationStateEvent != null)
+                {
+                    operationStateEvent.notifyCreateConnection(NioTypes.TYPE_TCP_CLIENT, isSuc,  entity.host, entity.port, entity.bindPort);
+                }
                 //callback?
                 break;
             }
