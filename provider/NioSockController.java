@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.*;
 import java.util.Collection;
-import java.util.LinkedList;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
@@ -80,8 +79,6 @@ public class NioSockController extends ANioController {
         dataDispatcher.mBindUdpReceiveQueue = mBindUdpReceiveQueue;
         dataDispatcher.mRemoteTcpReceiveQueue = mRemoteTcpReceiveQueue;
         dataDispatcher.mRemoteUdpReceiveQueue = mRemoteUdpReceiveQueue;
-        dataDispatcher.connectionDataEvent = connectionDataEvent;
-        dataDispatcher.serviceDataEvent = serviceDataEvent;
         dataDispatcher.isRun = true;
         dataDispatcher.start();
 
@@ -96,7 +93,7 @@ public class NioSockController extends ANioController {
 
 
     @Override
-    public boolean createTcpService(int bindPort) {
+    public boolean createTcpService(int bindPort, INotifyServiceDataHandler handler) {
         boolean isSuc = false;
 
         NioSockEntity nioSockEntity = mBindPool.obtain();
@@ -104,6 +101,7 @@ public class NioSockController extends ANioController {
         if (nioSockEntity != null) {
             nioSockEntity.channelType = NioTypes.TYPE_TCP_SERVER;// this is important, as case for thread
             nioSockEntity.bindPort = bindPort;
+            nioSockEntity.handle = handler;
 
             ServerSocketChannel channel = null;
 
@@ -251,7 +249,7 @@ public class NioSockController extends ANioController {
     }
 
     @Override
-    public boolean createUdpService(int bindPort) {
+    public boolean createUdpService(int bindPort, INotifyServiceDataHandler handler) {
         boolean isSuc = false;
 
         NioSockEntity nioSockEntity = mBindPool.obtain();
@@ -259,6 +257,7 @@ public class NioSockController extends ANioController {
         if (nioSockEntity != null) {
             nioSockEntity.channelType = NioTypes.TYPE_UDP_SERVER;// this is important, as case for thread
             nioSockEntity.bindPort = bindPort;
+            nioSockEntity.handle = handler;
 
             DatagramChannel channel = null;
 
@@ -271,6 +270,8 @@ public class NioSockController extends ANioController {
                 channel.register(mSelector, SelectionKey.OP_READ, nioSockEntity);
 
                 isSuc = mBindUdpServiceSocks.addChannel(nioSockEntity.bindPort + "", nioSockEntity);
+
+
 
             } catch (IOException e) {
                 e.printStackTrace();
@@ -348,7 +349,7 @@ public class NioSockController extends ANioController {
 
 
     @Override
-    public boolean createTcpConnection(String host, int port) {
+    public boolean createTcpConnection(String host, int port, INotifyConnectionDataHandler handler) {
         boolean isSuc = false;
 
         NioSockEntity nioSockEntity = mBindPool.obtain();
@@ -357,6 +358,7 @@ public class NioSockController extends ANioController {
             nioSockEntity.channelType = NioTypes.TYPE_TCP_CLIENT;// this is important, as case for thread
             nioSockEntity.host = host;
             nioSockEntity.port = port;
+            nioSockEntity.handle = handler;
 
             SocketChannel channel = null;
 
@@ -389,7 +391,7 @@ public class NioSockController extends ANioController {
     }
 
     @Override
-    public boolean createTcpConnection(int bindPort, String host, int port) {
+    public boolean createTcpConnection(int bindPort, String host, int port, INotifyConnectionDataHandler handler) {
         boolean isSuc = false;
 
         NioSockEntity nioSockEntity = mBindPool.obtain();
@@ -398,6 +400,7 @@ public class NioSockController extends ANioController {
             nioSockEntity.channelType = NioTypes.TYPE_TCP_CLIENT;// this is important, as case for thread
             nioSockEntity.host = host;
             nioSockEntity.port = port;
+            nioSockEntity.handle = handler;
 
             SocketChannel channel = null;
 
@@ -488,7 +491,7 @@ public class NioSockController extends ANioController {
     }
 
     @Override
-    public boolean createUdpConnection(String host, int port) {
+    public boolean createUdpConnection(String host, int port, INotifyConnectionDataHandler handler) {
         boolean isSuc = false;
 
         NioSockEntity nioSockEntity = mBindPool.obtain();
@@ -497,6 +500,7 @@ public class NioSockController extends ANioController {
             nioSockEntity.channelType = NioTypes.TYPE_UDP_CLIENT;// this is important, as case for thread
             nioSockEntity.host = host;
             nioSockEntity.port = port;
+            nioSockEntity.handle = handler;
 
             DatagramChannel channel = null;
 
@@ -515,9 +519,9 @@ public class NioSockController extends ANioController {
 
                 isSuc = mBindUdpConnectionSocks.addChannel(nioSockEntity.bindPort + "", nioSockEntity);
 
-                if (operationStateEvent != null)
+                if (handler != null)
                 {
-                    operationStateEvent.notifyCreateConnection(NioTypes.TYPE_UDP_CLIENT, isSuc,  host, port, nioSockEntity.bindPort);
+                    handler.notifyCreateConnection(NioTypes.TYPE_UDP_CLIENT, isSuc,  host, port, nioSockEntity.bindPort);
                 }
 
             } catch (IOException e) {
@@ -538,7 +542,7 @@ public class NioSockController extends ANioController {
     }
 
     @Override
-    public boolean createUdpConnection(int bindPort, String host, int port) {
+    public boolean createUdpConnection(int bindPort, String host, int port, INotifyConnectionDataHandler handler) {
         boolean isSuc = false;
 
         NioSockEntity nioSockEntity = mBindPool.obtain();
@@ -548,6 +552,7 @@ public class NioSockController extends ANioController {
             nioSockEntity.host = host;
             nioSockEntity.port = port;
             nioSockEntity.bindPort = bindPort;
+            nioSockEntity.handle = handler;
 
             DatagramChannel channel = null;
 
@@ -563,9 +568,9 @@ public class NioSockController extends ANioController {
 
 
                 isSuc = mBindUdpConnectionSocks.addChannel(nioSockEntity.bindPort + "", nioSockEntity);
-                if (operationStateEvent != null)
+                if (handler != null)
                 {
-                    operationStateEvent.notifyCreateConnection(NioTypes.TYPE_UDP_CLIENT, isSuc,  host, port, nioSockEntity.bindPort);
+                    handler.notifyCreateConnection(NioTypes.TYPE_UDP_CLIENT, isSuc,  host, port, nioSockEntity.bindPort);
                 }
 
             } catch (IOException e) {
@@ -825,19 +830,21 @@ public class NioSockController extends ANioController {
                 //accept client
                 String key = entity.host + ":" + entity.port;
                 boolean isSuc = mRemoteTcpSocks.addChannel(key, entity);
+                //notify: this handler had instead before accept
+                INotifyServiceDataHandler handler = (INotifyServiceDataHandler)entity.handle;
+                if (handler != null)
+                    handler.notifyCreateRemoteConnection(entity.channelType, true, entity.host, entity.port, entity.bindPort);
 
-                //callback?
                 break;
             }
             case NioTypes.TYPE_TCP_CLIENT: {
                 // local bind
                 String key = entity.bindPort + "";
                 boolean isSuc = mBindTcpConnectionSocks.addChannel(key, entity);
-                if (operationStateEvent != null)
-                {
-                    operationStateEvent.notifyCreateConnection(NioTypes.TYPE_TCP_CLIENT, isSuc,  entity.host, entity.port, entity.bindPort);
-                }
-                //callback?
+                INotifyConnectionDataHandler handler = (INotifyConnectionDataHandler)entity.handle;
+                if (handler != null)
+                    handler.notifyCreateConnection(entity.channelType, true, entity.host, entity.port, entity.bindPort);
+
                 break;
             }
         }

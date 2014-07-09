@@ -93,6 +93,7 @@ public class NioSockACRer extends Thread {
                                     clientChannel.register(mSelector, SelectionKey.OP_READ, seed);
 
                                     NioSockEntity.INioSockEventHandler handler = (NioSockEntity.INioSockEventHandler) nioSockEntity.handle;
+                                    nioSockEntity.handle = seed.handle;
                                     handler.birthSocket(nioSockEntity);
 
                                 }
@@ -106,12 +107,14 @@ public class NioSockACRer extends Thread {
 
                         SocketChannel channel = (SocketChannel) key.channel();
                         NioSockEntity seed = (NioSockEntity) key.attachment();
+                        nioSockEntity = mPool.obtain();//only use nioSockEntity handler
+
+                        if (nioSockEntity != null) {
 
 
-                        if (seed != null) {
 
 
-                            NioSockEntity.INioSockEventHandler handler = (NioSockEntity.INioSockEventHandler) seed.handle; //notify: as init is INioSockEventHandler, if not, pool obtain one, and give channel to it.
+                            NioSockEntity.INioSockEventHandler handler = (NioSockEntity.INioSockEventHandler) nioSockEntity.handle;
 
                             try {
                                 if (channel.finishConnect()) {
@@ -147,6 +150,8 @@ public class NioSockACRer extends Thread {
                             key.channel().close();
                         }
 
+                        mPool.recovery(nioSockEntity);//only use nioSockEntity handler
+
 
                     } else if (key.isReadable()) {
 
@@ -168,6 +173,8 @@ public class NioSockACRer extends Thread {
 
                                     if (nioSockEntity != null) {
                                         NioSockEntity.INioSockEventHandler handler = (NioSockEntity.INioSockEventHandler) nioSockEntity.handle;
+
+                                        nioSockEntity.handle = seed.handle;//notify:change handler!!!
 
                                         nioSockEntity.channelType = seed.channelType;
                                         nioSockEntity.tcpChannel = channel;
@@ -216,6 +223,8 @@ public class NioSockACRer extends Thread {
 
                                         if (nioSockEntity != null) {
                                             NioSockEntity.INioSockEventHandler handler = (NioSockEntity.INioSockEventHandler) nioSockEntity.handle;
+
+                                            nioSockEntity.handle = seed.handle;//notify:change handler!!!
 
                                             nioSockEntity.channelType = seed.channelType;
                                             nioSockEntity.udpChannel = channel;

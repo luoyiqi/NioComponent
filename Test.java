@@ -4,6 +4,7 @@ import NioComponent.provider.*;
 
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.SocketChannel;
+import java.util.ArrayList;
 
 /**
  * Created by charlown on 2014/6/27.
@@ -16,7 +17,16 @@ public class Test {
     {
         NioSocketProvider nioSocketProvider = new NioSocketProvider();
         int allocate_port;
+
+        public static ArrayList<Integer> ports  =  new ArrayList<Integer>();
         INotifyServiceDataHandler serviceDataHandler = new INotifyServiceDataHandler() {
+
+
+            @Override
+            public void notifyCreateRemoteConnection(int type, boolean isSuc, String host, int port, int allocatePort) {
+                System.out.println(port);
+            }
+
             @Override
             public void notifyRemoteReceiveBuffer(int type, int bindPort, String host, int port, final  byte[] buffer, int bufferSize) {
              //   System.out.println("buffer size = " + buffer.length);
@@ -65,10 +75,16 @@ public class Test {
         INotifyConnectionDataHandler connectionDataHandler = new INotifyConnectionDataHandler() {
 
             @Override
+            public void notifyCreateConnection(int type, boolean isSuc, String host, int port, int allocatePort) {
+
+                System.out.println(allocatePort);
+            }
+
+            @Override
             public void notifyBindReceiveBuffer(int type, int bindPort, String from, int port, byte[] buffer, int bufferSize) {
              //   System.out.println("buffer size = " + buffer.length);
-                String str = new String(buffer);
-            //    System.out.println("on port: " + bindPort + " from client: " + from + ":" + port + ", data: "+ str +", data size = " + bufferSize);
+               // String str = new String(buffer);
+                //System.out.println("on port: " + bindPort + " from client: " + from + ":" + port + ", data: "+ str +", data size = " + bufferSize);
 
 
 
@@ -122,25 +138,15 @@ public class Test {
 
             }
 
-            @Override
-            public void notifyCreateConnection(int type, boolean isSuc, String host, int port, int allocatePort) {
-                if (type == NioTypes.TYPE_TCP_CLIENT)
-                {
-                    if (isSuc)
-                    {
-                        allocate_port = allocatePort;
-                        System.out.println("connection allocate port: " + allocate_port);
-                    }
-                }
-            }
+
         };
 
         public TestCase()
         {
-            nioSocketProvider.addNotifyListener(serviceDataHandler);
-            nioSocketProvider.addNotifyListener(connectionDataHandler);
+
             nioSocketProvider.addNotifyListener(exceptionMsgHandler);
             nioSocketProvider.addNotifyListener(operationStateHandler);
+
         }
 
 
@@ -149,10 +155,12 @@ public class Test {
         {
             nioSocketProvider.init();
 
-           nioSocketProvider.createConnection(NioTypes.TYPE_TCP_CLIENT, "192.168.3.8", 10088);
-          //  nioSocketProvider.createServer(NioTypes.TYPE_TCP_SERVER, 10089);
-           // nioSocketProvider.createServer(NioTypes.TYPE_UDP_SERVER, 10090);
-           // nioSocketProvider.createConnection(NioTypes.TYPE_UDP_CLIENT, 10092, "192.168.3.8", 10091);
+         //  nioSocketProvider.createConnection(NioTypes.TYPE_TCP_CLIENT, "192.168.3.8", 10088, connectionDataHandler);
+          //  nioSocketProvider.createServer(NioTypes.TYPE_TCP_SERVER, 10089, serviceDataHandler);
+         //   nioSocketProvider.createServer(NioTypes.TYPE_UDP_SERVER, 10090, serviceDataHandler);
+           nioSocketProvider.createConnection(NioTypes.TYPE_UDP_CLIENT, 10092, "192.168.3.8", 10091, connectionDataHandler);
+
+
         }
 
 

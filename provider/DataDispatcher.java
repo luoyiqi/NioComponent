@@ -15,8 +15,7 @@ public class DataDispatcher extends Thread {
     public Queue<NioSockEntity> mRemoteUdpReceiveQueue;
 
 
-    public INotifyServiceDataHandler serviceDataEvent;
-    public INotifyConnectionDataHandler connectionDataEvent;
+
 
 
     @Override
@@ -28,9 +27,11 @@ public class DataDispatcher extends Thread {
             if (mRemoteTcpReceiveQueue != null) {
                 if (!mRemoteTcpReceiveQueue.isEmpty()) {
                     entity = mRemoteTcpReceiveQueue.poll();
-                    if (entity != null && serviceDataEvent != null) {
+                    if (entity != null ) {
                         byte[] data = entity.getBuffer();
-                        serviceDataEvent.notifyRemoteReceiveBuffer(entity.channelType ,entity.bindPort, entity.host, entity.port, data, entity.bufferSize);
+                        INotifyServiceDataHandler handler = (INotifyServiceDataHandler)entity.handle;
+                        if (handler != null)
+                            handler.notifyRemoteReceiveBuffer(entity.channelType ,entity.bindPort, entity.host, entity.port, data, entity.bufferSize);
                         if (mPool != null)
                             mPool.recovery(entity);
                     }
@@ -41,9 +42,11 @@ public class DataDispatcher extends Thread {
             if (mRemoteUdpReceiveQueue != null) {
                 if (!mRemoteUdpReceiveQueue.isEmpty()) {
                     entity = mRemoteUdpReceiveQueue.poll();
-                    if (entity != null && serviceDataEvent != null) {
+                    if (entity != null) {
                         byte[] data = entity.getBuffer();
-                        serviceDataEvent.notifyRemoteReceiveBuffer(entity.channelType ,entity.bindPort, entity.host, entity.port, data, entity.bufferSize);
+                        INotifyServiceDataHandler handler = (INotifyServiceDataHandler)entity.handle;
+                        if (handler != null)
+                            handler.notifyRemoteReceiveBuffer(entity.channelType ,entity.bindPort, entity.host, entity.port, data, entity.bufferSize);
                         if (mPool != null)
                             mPool.recovery(entity);
                     }
@@ -55,10 +58,12 @@ public class DataDispatcher extends Thread {
             if (mBindTcpReceiveQueue != null) {
                 if (!mBindTcpReceiveQueue.isEmpty()) {
                     entity = mBindTcpReceiveQueue.poll();
-                    if (entity != null && connectionDataEvent != null) {
+                    if (entity != null) {
 
                         byte[] data = entity.getBuffer();
-                        connectionDataEvent.notifyBindReceiveBuffer(entity.channelType ,entity.bindPort, entity.host, entity.port, data, entity.bufferSize);
+                        INotifyConnectionDataHandler handler = (INotifyConnectionDataHandler)entity.handle;
+                        if (handler != null)
+                            handler.notifyBindReceiveBuffer(entity.channelType ,entity.bindPort, entity.host, entity.port, data, entity.bufferSize);
                         if (mPool != null)
                             mPool.recovery(entity);
                     }
@@ -70,9 +75,11 @@ public class DataDispatcher extends Thread {
             if (mBindUdpReceiveQueue != null) {
                 if (!mBindUdpReceiveQueue.isEmpty()) {
                     entity = mBindUdpReceiveQueue.poll();
-                    if (entity != null && connectionDataEvent != null) {
+                    if (entity != null) {
                         byte[] data = entity.getBuffer();
-                        connectionDataEvent.notifyBindReceiveBuffer(entity.channelType ,entity.bindPort, entity.host, entity.port, data, entity.bufferSize);
+                        INotifyConnectionDataHandler handler = (INotifyConnectionDataHandler)entity.handle;
+                        if (handler != null)
+                            handler.notifyBindReceiveBuffer(entity.channelType ,entity.bindPort, entity.host, entity.port, data, entity.bufferSize);
                         if (mPool != null)
                             mPool.recovery(entity);
                     }

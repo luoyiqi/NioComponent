@@ -29,7 +29,8 @@ public class NioSockSender extends Thread{
                             case NioTypes.TYPE_TCP_SERVER:
                             case NioTypes.TYPE_TCP_CLIENT: {
                                 try {
-                                    sendEntity.tcpChannel.write(sendEntity.getSendByteBuffer());
+                                    if (sendEntity.tcpChannel.isConnected())
+                                        sendEntity.tcpChannel.write(sendEntity.getSendByteBuffer());
                                 } catch (IOException e) {
                                     e.printStackTrace();
                                 }

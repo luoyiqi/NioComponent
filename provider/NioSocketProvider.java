@@ -11,19 +11,12 @@ public class NioSocketProvider {
 
     private NioSockController controller;
 
-    private INotifyServiceDataHandler serviceDataHandler = null;
-    private INotifyConnectionDataHandler connectionDataHandler = null;
+
     private INotifyOperationStateHandler operationStateHandler = null;
     private INotifyExceptionMsgHandler exceptionMsgHandler = null;
 
 
-    public void addNotifyListener(INotifyServiceDataHandler notifyServiceData) {
-        serviceDataHandler = notifyServiceData;
-    }
 
-    public void addNotifyListener(INotifyConnectionDataHandler notifyConnectionData) {
-        connectionDataHandler = notifyConnectionData;
-    }
 
     public void addNotifyListener(INotifyOperationStateHandler notifyOperationState) {
         operationStateHandler = notifyOperationState;
@@ -34,28 +27,39 @@ public class NioSocketProvider {
     }
 
 
-    public void init() throws NullPointerException {
 
-        if (serviceDataHandler == null)
-            throw new NullPointerException("NotifyServiceDataListener is null.");
 
-        if (connectionDataHandler == null)
-            throw new NullPointerException("NotifyConnectionDataListener is null.");
+    private INotifyOperationStateHandler provider_NotifyOperationStateHandler = new INotifyOperationStateHandler() {
+        @Override
+        public void notifyOperationState(int type, int operationType, boolean isSuc) {
+            if (operationStateHandler != null)
+                operationStateHandler.notifyOperationState(type, operationType, isSuc);
+        }
 
-        if (exceptionMsgHandler == null)
-            throw new NullPointerException("NotifyExceptionMsgListener is null.");
 
-        if (operationStateHandler == null)
-            throw new NullPointerException("NotifyOperationStateListener is null.");
+    };
+
+    private INotifyExceptionMsgHandler provider_NotifyExceptionMsgHandler = new INotifyExceptionMsgHandler() {
+        @Override
+        public void notifyExceptionMsg(int type, int runtimeType, int subRuntimeType) {
+            if (exceptionMsgHandler != null)
+                exceptionMsgHandler.notifyExceptionMsg(type, runtimeType, subRuntimeType);
+        }
+    };
+
+
+
+
+
+
+
+    public void init(){
 
         if (controller == null) {
             controller = new NioSockController();
 
-            controller.addNotifyHandler(serviceDataHandler);
-            controller.addNotifyHandler(connectionDataHandler);
-            controller.addNotifyHandler(exceptionMsgHandler);
-            controller.addNotifyHandler(operationStateHandler);
-
+            controller.addNotifyHandler(provider_NotifyOperationStateHandler);
+            controller.addNotifyHandler(provider_NotifyExceptionMsgHandler);
 
             controller.init();
         }
@@ -63,15 +67,15 @@ public class NioSocketProvider {
     }
 
 
-    public boolean createServer(int type, int port) {
+    public boolean createServer(int type, int port, INotifyServiceDataHandler handler) {
         boolean isSuc = false;
 
 
         if (controller != null) {
             if (type == NioTypes.TYPE_TCP_SERVER) {
-                isSuc = controller.createTcpService(port);
+                isSuc = controller.createTcpService(port, handler);
             } else if (type == NioTypes.TYPE_UDP_SERVER) {
-                isSuc = controller.createUdpService(port);
+                isSuc = controller.createUdpService(port, handler);
             }
         }
 
@@ -127,16 +131,16 @@ public class NioSocketProvider {
     }
 
 
-    public boolean createConnection(int type, String host, int port) {
+    public boolean createConnection(int type, String host, int port, INotifyConnectionDataHandler handler) {
         boolean isSuc = false;
 
 
         if (controller != null) {
 
             if (type == NioTypes.TYPE_TCP_CLIENT) {
-                isSuc = controller.createTcpConnection(host, port);
+                isSuc = controller.createTcpConnection(host, port, handler);
             } else if (type == NioTypes.TYPE_UDP_CLIENT) {
-                isSuc = controller.createUdpConnection(host, port);
+                isSuc = controller.createUdpConnection(host, port, handler);
             }
 
         }
@@ -144,16 +148,16 @@ public class NioSocketProvider {
         return isSuc;
     }
 
-    public boolean createConnection(int type, int bindPort, String host, int port) {
+    public boolean createConnection(int type, int bindPort, String host, int port, INotifyConnectionDataHandler handler) {
         boolean isSuc = false;
 
 
         if (controller != null) {
 
             if (type == NioTypes.TYPE_TCP_CLIENT) {
-                isSuc = controller.createTcpConnection(bindPort, host, port);
+                isSuc = controller.createTcpConnection(bindPort, host, port, handler);
             } else if (type == NioTypes.TYPE_UDP_CLIENT) {
-                isSuc = controller.createUdpConnection(bindPort, host, port);
+                isSuc = controller.createUdpConnection(bindPort, host, port, handler);
             }
 
         }
