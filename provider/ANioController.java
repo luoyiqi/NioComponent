@@ -19,10 +19,8 @@ public abstract class ANioController implements NioSockEntity.INioSockEventHandl
     protected NioSockMap<NioSockEntity> mBindUdpConnectionSocks;
     protected NioSockMap<NioSockEntity> mRemoteTcpSocks;
     protected NioSockEntityPool mReadPool,mWritePool, mBindPool;
-    protected Queue<NioSockEntity> mBindTcpReceiveQueue;
-    protected Queue<NioSockEntity> mBindUdpReceiveQueue;
-    protected Queue<NioSockEntity> mRemoteTcpReceiveQueue;
-    protected Queue<NioSockEntity> mRemoteUdpReceiveQueue;
+    protected Queue<NioSockEntity> mReceiveQueue;
+
 
     protected Queue<NioSockEntity> mSendQueue;
 
@@ -30,40 +28,38 @@ public abstract class ANioController implements NioSockEntity.INioSockEventHandl
 
 
     protected INotifyExceptionMsgHandler exceptionMsgEvent;
-    protected INotifyOperationStateHandler operationStateEvent;
+
 
 
     public void addNotifyHandler(INotifyExceptionMsgHandler eventHandler) {
         exceptionMsgEvent = eventHandler;
     }
-    public void addNotifyHandler(INotifyOperationStateHandler eventHandler) {
-        operationStateEvent = eventHandler;
-    }
+
 
 
 
     public abstract void init();
 
 
-    public abstract boolean createTcpService(int bindPort, INotifyServiceDataHandler handler);
+    public abstract boolean createTcpService(int bindPort, INotifyServiceEventHandler handler);
     public abstract void removeTcpService(int bindPort);
     public abstract void removeAllTcpService();
     public abstract void removeRemoteTcpConnection(String ip, int port);
     public abstract void removeAllRemoteTcpConnection();
 
 
-    public abstract boolean createUdpService(int bindPort, INotifyServiceDataHandler handler);
+    public abstract boolean createUdpService(int bindPort, INotifyServiceEventHandler handler);
     public abstract void removeUdpService(int bindPort);
     public abstract void removeAllUdpService();
 
 
-    public abstract boolean createTcpConnection(String host, int port, INotifyConnectionDataHandler handler);
-    public abstract boolean createTcpConnection(int bindPort, String host, int port, INotifyConnectionDataHandler handler);
+    public abstract boolean createTcpConnection(String host, int port, INotifyConnectionEventHandler handler);
+    public abstract boolean createTcpConnection(int bindPort, String host, int port, INotifyConnectionEventHandler handler);
     public abstract void removeTcpConnection(int bindPort);
     public abstract void removeAllTcpConnection();
 
-    public abstract boolean createUdpConnection(String host, int port, INotifyConnectionDataHandler handler);
-    public abstract boolean createUdpConnection(int bindPort, String host, int port, INotifyConnectionDataHandler handler);
+    public abstract boolean createUdpConnection(String host, int port, INotifyConnectionEventHandler handler);
+    public abstract boolean createUdpConnection(int bindPort, String host, int port, INotifyConnectionEventHandler handler);
     public abstract void removeUdpConnection(int bindPort);
     public abstract void removeAllUdpConnection();
 

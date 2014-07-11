@@ -12,116 +12,96 @@ import java.util.ArrayList;
 public class Test {
 
 
-
-    public static class TestCase
-    {
+    public static class TestCase {
         NioSocketProvider nioSocketProvider = new NioSocketProvider();
         int allocate_port;
 
-        public static ArrayList<Integer> ports  =  new ArrayList<Integer>();
-        INotifyServiceDataHandler serviceDataHandler = new INotifyServiceDataHandler() {
-
+        public static ArrayList<Integer> ports = new ArrayList<Integer>();
+        INotifyServiceEventHandler serviceDataHandler = new INotifyServiceEventHandler() {
 
             @Override
-            public void notifyCreateRemoteConnection(int type, boolean isSuc, String host, int port, int allocatePort) {
-                System.out.println(port);
+            public void notifyCreateRemoteConnection(int type, int bindPort, String host, int port) {
+                System.out.println("on port: " + bindPort + " remote: " + host + ":" + port + " connect");
             }
 
             @Override
-            public void notifyRemoteReceiveBuffer(int type, int bindPort, String host, int port, final  byte[] buffer, int bufferSize) {
-             //   System.out.println("buffer size = " + buffer.length);
-                String str = new String(buffer);
-              //  System.out.println("on port: " + bindPort + " receive client: " + host + ":" + port + ", data: " + str +", data size = " + bufferSize);
+            public void notifyRemoteDisconnect(int type, int bindPort, String host, int port) {
+
+                System.out.println("on port: " + bindPort + " remote: " + host + ":" + port + " disconnect");
+            }
+
+            @Override
+            public void notifyRemoteReceiveBuffer(int type, int bindPort, String host, int port, final byte[] buffer, int bufferSize) {
+                //   System.out.println("buffer size = " + buffer.length);
+               // String str = new String(buffer);
+                  System.out.println("on port: " + bindPort + " receive client: " + host + ":" + port + ", data size = " + bufferSize);
 
 
-
-                switch (type)
-                {
-                    case NioTypes.TYPE_TCP_SERVER:
-                    {
-                        try
-                        {
-                            SocketChannel channel =  nioSocketProvider.getRemoteTcpConnectionChannel(host, port);
+                switch (type) {
+                    case NioTypes.TYPE_TCP_SERVER: {
+                        try {
+                            SocketChannel channel = nioSocketProvider.getRemoteTcpConnectionChannel(host, port);
 
                             nioSocketProvider.addBufferToSend(type, channel, buffer, bufferSize);
-                        }catch (NullPointerException npe)
-                        {
+                        } catch (NullPointerException npe) {
                             npe.printStackTrace();
                         }
 
                         break;
                     }
-                    case NioTypes.TYPE_UDP_SERVER:
-                    {
-                        try
-                        {
-                            DatagramChannel channel =  nioSocketProvider.getUdpServiceChannel(bindPort);
+                    case NioTypes.TYPE_UDP_SERVER: {
+                        try {
+                            DatagramChannel channel = nioSocketProvider.getUdpServiceChannel(bindPort);
 
                             nioSocketProvider.addBufferToSend(type, channel, buffer, bufferSize, host, port);
-                        }catch (NullPointerException npe)
-                        {
+                        } catch (NullPointerException npe) {
                             npe.printStackTrace();
                         }
                         break;
                     }
                 }
-
-
 
 
             }
         };
 
-        INotifyConnectionDataHandler connectionDataHandler = new INotifyConnectionDataHandler() {
+        INotifyConnectionEventHandler connectionDataHandler = new INotifyConnectionEventHandler() {
 
             @Override
-            public void notifyCreateConnection(int type, boolean isSuc, String host, int port, int allocatePort) {
+            public void notifyCreateConnection(int type, int localPort, String remoteIp, int remotePort) {
 
-                System.out.println(allocatePort);
             }
 
             @Override
-            public void notifyBindReceiveBuffer(int type, int bindPort, String from, int port, byte[] buffer, int bufferSize) {
-             //   System.out.println("buffer size = " + buffer.length);
-               // String str = new String(buffer);
-                //System.out.println("on port: " + bindPort + " from client: " + from + ":" + port + ", data: "+ str +", data size = " + bufferSize);
+            public void notifyDisconnect(int type, int localPort, String remoteIp, int remotePort) {
 
+            }
 
-
-
-
-                switch (type)
-                {
-                    case NioTypes.TYPE_TCP_CLIENT:
-                    {
-                        try
-                        {
-                            SocketChannel channel =  nioSocketProvider.getTcpConnectionChannel(bindPort);
+            @Override
+            public void notifyLocalReceiveBuffer(int type, int localPort, String remoteIp, int remotePort, byte[] buffer, int bufferSize) {
+                switch (type) {
+                    case NioTypes.TYPE_TCP_CLIENT: {
+                        try {
+                            SocketChannel channel = nioSocketProvider.getTcpConnectionChannel(localPort);
 
                             nioSocketProvider.addBufferToSend(type, channel, buffer, bufferSize);
-                        }catch (NullPointerException npe)
-                        {
+                        } catch (NullPointerException npe) {
                             npe.printStackTrace();
                         }
 
                         break;
                     }
-                    case NioTypes.TYPE_UDP_CLIENT:
-                    {
-                        try
-                        {
-                            DatagramChannel channel =  nioSocketProvider.getUdpConnectionChannel(bindPort);
+                    case NioTypes.TYPE_UDP_CLIENT: {
+                        try {
+                            DatagramChannel channel = nioSocketProvider.getUdpConnectionChannel(localPort);
 
-                            nioSocketProvider.addBufferToSend(type, channel, buffer, bufferSize, from, port);
-                        }catch (NullPointerException npe)
-                        {
+                            nioSocketProvider.addBufferToSend(type, channel, buffer, bufferSize, remoteIp, remotePort);
+                        } catch (NullPointerException npe) {
                             npe.printStackTrace();
                         }
                         break;
                     }
                 }
-
-
             }
         };
 
@@ -132,33 +112,21 @@ public class Test {
             }
         };
 
-        INotifyOperationStateHandler operationStateHandler = new INotifyOperationStateHandler() {
-            @Override
-            public void notifyOperationState(int type, int operationType, boolean isSuc) {
 
-            }
-
-
-        };
-
-        public TestCase()
-        {
+        public TestCase() {
 
             nioSocketProvider.addNotifyListener(exceptionMsgHandler);
-            nioSocketProvider.addNotifyListener(operationStateHandler);
 
         }
 
 
-
-        public void start()
-        {
+        public void start() {
             nioSocketProvider.init();
 
-         //  nioSocketProvider.createConnection(NioTypes.TYPE_TCP_CLIENT, "192.168.3.8", 10088, connectionDataHandler);
-          //  nioSocketProvider.createServer(NioTypes.TYPE_TCP_SERVER, 10089, serviceDataHandler);
-         //   nioSocketProvider.createServer(NioTypes.TYPE_UDP_SERVER, 10090, serviceDataHandler);
-           nioSocketProvider.createConnection(NioTypes.TYPE_UDP_CLIENT, 10092, "192.168.3.8", 10091, connectionDataHandler);
+              nioSocketProvider.createConnection(NioTypes.TYPE_TCP_CLIENT, "192.168.3.8", 10088, connectionDataHandler);
+              nioSocketProvider.createServer(NioTypes.TYPE_TCP_SERVER, 10089, serviceDataHandler);
+            //   nioSocketProvider.createServer(NioTypes.TYPE_UDP_SERVER, 10090, serviceDataHandler);
+           // nioSocketProvider.createConnection(NioTypes.TYPE_UDP_CLIENT, 10092, "192.168.3.8", 10091, connectionDataHandler);
 
 
         }
@@ -167,9 +135,7 @@ public class Test {
     }
 
 
-
-    public static void main(String [] args)
-    {
+    public static void main(String[] args) {
 
 
         TestCase testCase = new TestCase();

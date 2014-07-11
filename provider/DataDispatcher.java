@@ -9,13 +9,8 @@ public class DataDispatcher extends Thread {
     public boolean isRun = true;
 
     public NioSockEntityPool mPool;
-    public Queue<NioSockEntity> mBindTcpReceiveQueue;
-    public Queue<NioSockEntity> mBindUdpReceiveQueue;
-    public Queue<NioSockEntity> mRemoteTcpReceiveQueue;
-    public Queue<NioSockEntity> mRemoteUdpReceiveQueue;
 
-
-
+    public Queue<NioSockEntity> mReceiveQueue;
 
 
     @Override
@@ -24,62 +19,28 @@ public class DataDispatcher extends Thread {
         NioSockEntity entity;
 
         while (isRun) {
-            if (mRemoteTcpReceiveQueue != null) {
-                if (!mRemoteTcpReceiveQueue.isEmpty()) {
-                    entity = mRemoteTcpReceiveQueue.poll();
-                    if (entity != null ) {
-                        byte[] data = entity.getBuffer();
-                        INotifyServiceDataHandler handler = (INotifyServiceDataHandler)entity.handle;
-                        if (handler != null)
-                            handler.notifyRemoteReceiveBuffer(entity.channelType ,entity.bindPort, entity.host, entity.port, data, entity.bufferSize);
-                        if (mPool != null)
-                            mPool.recovery(entity);
-                    }
-
-                }
-
-            }
-            if (mRemoteUdpReceiveQueue != null) {
-                if (!mRemoteUdpReceiveQueue.isEmpty()) {
-                    entity = mRemoteUdpReceiveQueue.poll();
+            if (mReceiveQueue != null) {
+                if (!mReceiveQueue.isEmpty()) {
+                    entity = mReceiveQueue.poll();
                     if (entity != null) {
                         byte[] data = entity.getBuffer();
-                        INotifyServiceDataHandler handler = (INotifyServiceDataHandler)entity.handle;
-                        if (handler != null)
-                            handler.notifyRemoteReceiveBuffer(entity.channelType ,entity.bindPort, entity.host, entity.port, data, entity.bufferSize);
-                        if (mPool != null)
-                            mPool.recovery(entity);
-                    }
 
-                }
-
-            }
-
-            if (mBindTcpReceiveQueue != null) {
-                if (!mBindTcpReceiveQueue.isEmpty()) {
-                    entity = mBindTcpReceiveQueue.poll();
-                    if (entity != null) {
-
-                        byte[] data = entity.getBuffer();
-                        INotifyConnectionDataHandler handler = (INotifyConnectionDataHandler)entity.handle;
-                        if (handler != null)
-                            handler.notifyBindReceiveBuffer(entity.channelType ,entity.bindPort, entity.host, entity.port, data, entity.bufferSize);
-                        if (mPool != null)
-                            mPool.recovery(entity);
-                    }
-
-                }
-
-            }
-
-            if (mBindUdpReceiveQueue != null) {
-                if (!mBindUdpReceiveQueue.isEmpty()) {
-                    entity = mBindUdpReceiveQueue.poll();
-                    if (entity != null) {
-                        byte[] data = entity.getBuffer();
-                        INotifyConnectionDataHandler handler = (INotifyConnectionDataHandler)entity.handle;
-                        if (handler != null)
-                            handler.notifyBindReceiveBuffer(entity.channelType ,entity.bindPort, entity.host, entity.port, data, entity.bufferSize);
+                        switch (entity.channelType) {
+                            case NioTypes.TYPE_TCP_SERVER:
+                            case NioTypes.TYPE_UDP_SERVER: {
+                                INotifyServiceEventHandler handler = (INotifyServiceEventHandler) entity.handle;
+                                if (handler != null)
+                                    handler.notifyRemoteReceiveBuffer(entity.channelType, entity.bindPort, entity.host, entity.port, data, entity.bufferSize);
+                                break;
+                            }
+                            case NioTypes.TYPE_TCP_CLIENT:
+                            case NioTypes.TYPE_UDP_CLIENT: {
+                                INotifyConnectionEventHandler handler = (INotifyConnectionEventHandler) entity.handle;
+                                if (handler != null)
+                                    handler.notifyLocalReceiveBuffer(entity.channelType, entity.bindPort, entity.host, entity.port, data, entity.bufferSize);
+                                break;
+                            }
+                        }
                         if (mPool != null)
                             mPool.recovery(entity);
                     }

@@ -11,33 +11,13 @@ public class NioSocketProvider {
 
     private NioSockController controller;
 
-
-    private INotifyOperationStateHandler operationStateHandler = null;
     private INotifyExceptionMsgHandler exceptionMsgHandler = null;
 
-
-
-
-    public void addNotifyListener(INotifyOperationStateHandler notifyOperationState) {
-        operationStateHandler = notifyOperationState;
-    }
 
     public void addNotifyListener(INotifyExceptionMsgHandler notifyExceptionMsg) {
         exceptionMsgHandler = notifyExceptionMsg;
     }
 
-
-
-
-    private INotifyOperationStateHandler provider_NotifyOperationStateHandler = new INotifyOperationStateHandler() {
-        @Override
-        public void notifyOperationState(int type, int operationType, boolean isSuc) {
-            if (operationStateHandler != null)
-                operationStateHandler.notifyOperationState(type, operationType, isSuc);
-        }
-
-
-    };
 
     private INotifyExceptionMsgHandler provider_NotifyExceptionMsgHandler = new INotifyExceptionMsgHandler() {
         @Override
@@ -48,17 +28,11 @@ public class NioSocketProvider {
     };
 
 
-
-
-
-
-
-    public void init(){
+    public void init() {
 
         if (controller == null) {
-            controller = new NioSockController();
+            controller = new NioSockController(1024, 4 * 1024, 1024, 2048);
 
-            controller.addNotifyHandler(provider_NotifyOperationStateHandler);
             controller.addNotifyHandler(provider_NotifyExceptionMsgHandler);
 
             controller.init();
@@ -67,7 +41,7 @@ public class NioSocketProvider {
     }
 
 
-    public boolean createServer(int type, int port, INotifyServiceDataHandler handler) {
+    public boolean createServer(int type, int port, INotifyServiceEventHandler handler) {
         boolean isSuc = false;
 
 
@@ -131,7 +105,7 @@ public class NioSocketProvider {
     }
 
 
-    public boolean createConnection(int type, String host, int port, INotifyConnectionDataHandler handler) {
+    public boolean createConnection(int type, String host, int port, INotifyConnectionEventHandler handler) {
         boolean isSuc = false;
 
 
@@ -148,7 +122,7 @@ public class NioSocketProvider {
         return isSuc;
     }
 
-    public boolean createConnection(int type, int bindPort, String host, int port, INotifyConnectionDataHandler handler) {
+    public boolean createConnection(int type, int bindPort, String host, int port, INotifyConnectionEventHandler handler) {
         boolean isSuc = false;
 
 
@@ -191,88 +165,55 @@ public class NioSocketProvider {
     }
 
 
-    public SocketChannel getTcpConnectionChannel(int bindPort) throws NullPointerException {
+    public SocketChannel getTcpConnectionChannel(int bindPort) {
 
-        SocketChannel channel;
+        SocketChannel channel = null;
 
 
-        if (controller != null)
-        {
+        if (controller != null) {
             channel = controller.getConnectionSocketChannel(bindPort);
         }
-        else
-        {
-            throw new NullPointerException("NioSocketProvider no init.");
-        }
-
-        if (channel == null)
-            throw  new NullPointerException("no channel of bindPort.");
 
 
         return channel;
 
     }
 
-    public DatagramChannel getUdpConnectionChannel(int bindPort) throws NullPointerException {
+    public DatagramChannel getUdpConnectionChannel(int bindPort) {
 
-        DatagramChannel channel;
+        DatagramChannel channel = null;
 
 
-        if (controller != null)
-        {
+        if (controller != null) {
             channel = controller.getConnectionDatagramChannel(bindPort);
         }
-        else
-        {
-            throw new NullPointerException("NioSocketProvider no init.");
-        }
-
-        if (channel == null)
-            throw  new NullPointerException("no channel of bindPort.");
-
 
         return channel;
 
     }
 
-    public SocketChannel getRemoteTcpConnectionChannel(String host, int port) throws NullPointerException {
+    public SocketChannel getRemoteTcpConnectionChannel(String host, int port) {
 
-        SocketChannel channel;
+        SocketChannel channel = null;
 
 
-        if (controller != null)
-        {
+        if (controller != null) {
             channel = controller.getRemoteConnectionSocketChannel(host, port);
         }
-        else
-        {
-            throw new NullPointerException("NioSocketProvider no init.");
-        }
-
-        if (channel == null)
-            throw  new NullPointerException("no channel of host, port.");
 
 
         return channel;
 
     }
 
-    public DatagramChannel getUdpServiceChannel(int bindPort) throws NullPointerException {
+    public DatagramChannel getUdpServiceChannel(int bindPort) {
 
-        DatagramChannel channel;
+        DatagramChannel channel = null;
 
 
-        if (controller != null)
-        {
+        if (controller != null) {
             channel = controller.getServiceDatagramChannel(bindPort);
         }
-        else
-        {
-            throw new NullPointerException("NioSocketProvider no init.");
-        }
-
-        if (channel == null)
-            throw  new NullPointerException("no channel of bindPort.");
 
 
         return channel;
@@ -280,18 +221,16 @@ public class NioSocketProvider {
     }
 
 
-    public  void addBufferToSend(int type, SocketChannel channel, byte[] data, int dataSize)
-    {
+    public void addBufferToSend(int type, SocketChannel channel, byte[] data, int dataSize) {
         if (controller != null)
             controller.addBufferToSend(type, channel, data, dataSize);
     }
-    public void addBufferToSend(int type, DatagramChannel channel, byte[] data, int dataSize, String host, int port)
-    {
+
+    public void addBufferToSend(int type, DatagramChannel channel, byte[] data, int dataSize, String host, int port) {
 
         if (controller != null)
             controller.addBufferToSend(type, channel, data, dataSize, host, port);
     }
-
 
 
     public void destroyController() {

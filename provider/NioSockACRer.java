@@ -18,7 +18,6 @@ public class NioSockACRer extends Thread {
     public int defaultSize = 1024;
     public boolean isRun = true;
     public INotifyExceptionMsgHandler exceptionMsgEvent;
-    public INotifyOperationStateHandler operationStateEvent;
 
 
     @Override
@@ -112,8 +111,6 @@ public class NioSockACRer extends Thread {
                         if (nioSockEntity != null) {
 
 
-
-
                             NioSockEntity.INioSockEventHandler handler = (NioSockEntity.INioSockEventHandler) nioSockEntity.handle;
 
                             try {
@@ -156,7 +153,6 @@ public class NioSockACRer extends Thread {
                     } else if (key.isReadable()) {
 
 
-
                         NioSockEntity seed = (NioSockEntity) key.attachment();
 
                         if (seed != null) {
@@ -184,7 +180,6 @@ public class NioSockACRer extends Thread {
                                             mBuffer.flip();
 
                                             nioSockEntity.setBuffer(mBuffer);
-
 
 
                                             if (handler != null) {
