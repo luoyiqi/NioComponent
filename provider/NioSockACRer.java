@@ -137,8 +137,6 @@ public class NioSockACRer extends Thread {
 
                                 //need callback
                                 handler.stillbirthSocket(seed);
-                                mPool.recovery(seed);
-
 
                             }
 

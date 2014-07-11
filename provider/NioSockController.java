@@ -30,7 +30,7 @@ public class NioSockController extends ANioController {
         mReadPool = new NioSockEntityPool(poolCapacity, this);
         mWritePool = new NioSockEntityPool(poolCapacity, this);
         mBindPool = new NioSockEntityPool(bindPoolCapacity, this);//handle, better way?
-        mReceiveQueue = new ArrayBlockingQueue<NioSockEntity>(capacity);
+        mReceiveQueue = new ArrayBlockingQueue<NioSockEntity>(4 * capacity); //all  receive
 
         mSendQueue = new ArrayBlockingQueue<NioSockEntity>(capacity);
     }
@@ -48,7 +48,7 @@ public class NioSockController extends ANioController {
         mReadPool = new NioSockEntityPool(poolCapacity, this);
         mWritePool = new NioSockEntityPool(poolCapacity, this);
         mBindPool = new NioSockEntityPool(bindPoolCapacity, this);//handle, better way?
-        mReceiveQueue = new ArrayBlockingQueue<NioSockEntity>(capacity);
+        mReceiveQueue = new ArrayBlockingQueue<NioSockEntity>(4 * capacity); //all  receive
 
         mSendQueue = new ArrayBlockingQueue<NioSockEntity>(capacity);
     }
@@ -68,7 +68,7 @@ public class NioSockController extends ANioController {
         mBindPool = new NioSockEntityPool(bindPoolCapacity, bufferSize, this);//handle, better way?
         mReceiveQueue = new ArrayBlockingQueue<NioSockEntity>(capacity);
 
-        mSendQueue = new ArrayBlockingQueue<NioSockEntity>(capacity);
+        mSendQueue = new ArrayBlockingQueue<NioSockEntity>(4 * capacity); //all  receive
     }
 
 
@@ -823,14 +823,20 @@ public class NioSockController extends ANioController {
 
     @Override
     public void stillbirthSocket(NioSockEntity entity) {
+
         switch (entity.channelType) {
             case NioTypes.TYPE_TCP_CLIENT: {
                 try {
                     entity.tcpChannel.close();
                     //callback?
+                    INotifyConnectionEventHandler handler = (INotifyConnectionEventHandler) entity.handle;
+                    if (handler != null) {
+                        handler.notifyDisconnect(entity.channelType, entity.bindPort, entity.host, entity.port);
+                    }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+                mBindPool.recovery(entity);
                 break;
             }
         }

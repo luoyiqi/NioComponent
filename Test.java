@@ -69,12 +69,12 @@ public class Test {
 
             @Override
             public void notifyCreateConnection(int type, int localPort, String remoteIp, int remotePort) {
-
+                System.out.println("on port: " + localPort + " connect: " + remoteIp + ":" + remotePort + " success");
             }
 
             @Override
             public void notifyDisconnect(int type, int localPort, String remoteIp, int remotePort) {
-
+                System.out.println("on port: " + localPort + " connect: " + remoteIp + ":" + remotePort + " fail");
             }
 
             @Override
