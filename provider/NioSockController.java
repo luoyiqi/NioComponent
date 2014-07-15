@@ -32,7 +32,7 @@ public class NioSockController extends ANioController {
         mBindPool = new NioSockEntityPool(bindPoolCapacity, this);//handle, better way?
         mReceiveQueue = new ArrayBlockingQueue<NioSockEntity>(4 * capacity); //all  receive
 
-        mSendQueue = new ArrayBlockingQueue<NioSockEntity>(capacity);
+        mSendQueue = new ArrayBlockingQueue<NioSockEntity>(10 * capacity);
     }
 
     public NioSockController(int capacity, int poolCapacity, int bindPoolCapacity) {
@@ -50,7 +50,7 @@ public class NioSockController extends ANioController {
         mBindPool = new NioSockEntityPool(bindPoolCapacity, this);//handle, better way?
         mReceiveQueue = new ArrayBlockingQueue<NioSockEntity>(4 * capacity); //all  receive
 
-        mSendQueue = new ArrayBlockingQueue<NioSockEntity>(capacity);
+        mSendQueue = new ArrayBlockingQueue<NioSockEntity>(10 * capacity);
     }
 
     public NioSockController(int capacity, int poolCapacity, int bindPoolCapacity, int bufferSize) {
@@ -66,9 +66,9 @@ public class NioSockController extends ANioController {
         mReadPool = new NioSockEntityPool(poolCapacity, bufferSize, this);
         mWritePool = new NioSockEntityPool(poolCapacity, bufferSize, this);
         mBindPool = new NioSockEntityPool(bindPoolCapacity, bufferSize, this);//handle, better way?
-        mReceiveQueue = new ArrayBlockingQueue<NioSockEntity>(capacity);
+        mReceiveQueue = new ArrayBlockingQueue<NioSockEntity>(4 * capacity); //all  receive
 
-        mSendQueue = new ArrayBlockingQueue<NioSockEntity>(4 * capacity); //all  receive
+        mSendQueue = new ArrayBlockingQueue<NioSockEntity>(10 * capacity);
     }
 
 

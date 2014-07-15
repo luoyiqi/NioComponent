@@ -2,6 +2,7 @@ package NioComponent.provider;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.util.Queue;
 
 /**
@@ -29,8 +30,11 @@ public class NioSockSender extends Thread{
                             case NioTypes.TYPE_TCP_SERVER:
                             case NioTypes.TYPE_TCP_CLIENT: {
                                 try {
-                                    if (sendEntity.tcpChannel.isConnected())
-                                        sendEntity.tcpChannel.write(sendEntity.getSendByteBuffer());
+                                    if (sendEntity.tcpChannel.isConnected()) {
+                                        ByteBuffer sendByteBuffer = sendEntity.getSendByteBuffer();
+                                        while (sendByteBuffer.hasRemaining())
+                                            sendEntity.tcpChannel.write(sendByteBuffer);
+                                    }
                                 } catch (IOException e) {
                                     e.printStackTrace();
                                 }
@@ -39,7 +43,9 @@ public class NioSockSender extends Thread{
                             case NioTypes.TYPE_UDP_SERVER:
                             case NioTypes.TYPE_UDP_CLIENT: {
                                 try {
-                                    sendEntity.udpChannel.send(sendEntity.getSendByteBuffer(), new InetSocketAddress(sendEntity.host, sendEntity.port));
+                                    ByteBuffer sendByteBuffer = sendEntity.getSendByteBuffer();
+                                    while (sendByteBuffer.hasRemaining())
+                                        sendEntity.udpChannel.send(sendByteBuffer, new InetSocketAddress(sendEntity.host, sendEntity.port));
                                 } catch (IOException e) {
                                     e.printStackTrace();
                                 }
