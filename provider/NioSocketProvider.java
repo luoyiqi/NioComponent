@@ -35,7 +35,7 @@ public class NioSocketProvider {
 
             controller.addNotifyHandler(provider_NotifyExceptionMsgHandler);
 
-            controller.init();
+            controller.init(2048);
         }
 
     }

@@ -39,6 +39,7 @@ public abstract class ANioController implements NioSockEntity.INioSockEventHandl
 
 
     public abstract void init();
+    public abstract void init(int capacity);
 
 
     public abstract boolean createTcpService(int bindPort, INotifyServiceEventHandler handler);

@@ -15,9 +15,20 @@ import java.util.Set;
 public class NioSockACRer extends Thread {
     public NioSockEntityPool mPool;
     public Selector mSelector;
-    public int defaultSize = 1024;
+    public int defaultSize;
     public boolean isRun = true;
     public INotifyExceptionMsgHandler exceptionMsgEvent;
+
+
+    public NioSockACRer()
+    {
+        defaultSize = 1024;
+    }
+
+    public NioSockACRer(int capacity)
+    {
+        defaultSize = capacity;
+    }
 
 
     @Override

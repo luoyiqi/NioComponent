@@ -103,6 +103,36 @@ public class NioSockController extends ANioController {
 
     }
 
+    @Override
+    public void init(int capacity) {
+        try {
+            mSelector = Selector.open();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        nioSockACRer = new NioSockACRer(capacity);
+        nioSockACRer.mSelector = mSelector;
+        nioSockACRer.mPool = mReadPool;
+        nioSockACRer.isRun = true;
+        nioSockACRer.exceptionMsgEvent = exceptionMsgEvent;
+        nioSockACRer.start();
+
+        dataDispatcher = new DataDispatcher();
+        dataDispatcher.mPool = mReadPool;
+
+        dataDispatcher.mReceiveQueue = mReceiveQueue;
+        dataDispatcher.isRun = true;
+        dataDispatcher.start();
+
+        nioSockSender = new NioSockSender();
+        nioSockSender.isRun = true;
+        nioSockSender.mPool = mWritePool;
+        nioSockSender.sendCache = mSendQueue;
+        nioSockSender.start();
+
+    }
+
 
     @Override
     public boolean createTcpService(int bindPort, INotifyServiceEventHandler handler) {
