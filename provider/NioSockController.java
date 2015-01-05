@@ -918,9 +918,11 @@ public class NioSockController extends ANioController {
                         entity.tcpChannel.close();
                     }
 
-                    INotifyServiceEventHandler handler = (INotifyServiceEventHandler) entity.handle;
-                    if (handler != null) {
+                    if (entity.handle instanceof INotifyServiceEventHandler) {
+                        INotifyServiceEventHandler handler = (INotifyServiceEventHandler) entity.handle;
+
                         handler.notifyRemoteDisconnect(entity.channelType, entity.bindPort, entity.host, entity.port);
+
                     }
 
                     mReadPool.recovery(entity);

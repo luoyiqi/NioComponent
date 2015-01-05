@@ -73,7 +73,7 @@ public class NioSockEntity {
 
     }
 
-    public void reset(Object handler)
+    public void reset(final Object handler)
     {
         channelType = -1;
         udpChannel = null;

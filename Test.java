@@ -21,7 +21,7 @@ public class Test {
 
             @Override
             public void notifyCreateRemoteConnection(int type, int bindPort, String host, int port) {
-                System.out.println("on port: " + bindPort + " remote: " + host + ":" + port + " connect");
+              //  System.out.println("on port: " + bindPort + " remote: " + host + ":" + port + " connect");
             }
 
             @Override
@@ -34,7 +34,7 @@ public class Test {
             public void notifyRemoteReceiveBuffer(int type, int bindPort, String host, int port, final byte[] buffer, int bufferSize) {
                 //   System.out.println("buffer size = " + buffer.length);
                // String str = new String(buffer);
-                  System.out.println("on port: " + bindPort + " receive client: " + host + ":" + port + ", data size = " + bufferSize);
+                //  System.out.println("on port: " + bindPort + " receive client: " + host + ":" + port + ", data size = " + bufferSize);
 
 
                 switch (type) {
@@ -123,7 +123,7 @@ public class Test {
         public void start() {
             nioSocketProvider.init();
 
-              nioSocketProvider.createConnection(NioTypes.TYPE_TCP_CLIENT, "192.168.3.8", 10088, connectionDataHandler);
+             // nioSocketProvider.createConnection(NioTypes.TYPE_TCP_CLIENT, "192.168.3.8", 10088, connectionDataHandler);
               nioSocketProvider.createServer(NioTypes.TYPE_TCP_SERVER, 10089, serviceDataHandler);
             //   nioSocketProvider.createServer(NioTypes.TYPE_UDP_SERVER, 10090, serviceDataHandler);
            // nioSocketProvider.createConnection(NioTypes.TYPE_UDP_CLIENT, 10092, "192.168.3.8", 10091, connectionDataHandler);

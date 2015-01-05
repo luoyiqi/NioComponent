@@ -31,7 +31,7 @@ public class NioSocketProvider {
     public void init() {
 
         if (controller == null) {
-            controller = new NioSockController(1024, 4 * 1024, 1024, 2048);
+            controller = new NioSockController(1024*10, 1024, 1024, 2048);
 
             controller.addNotifyHandler(provider_NotifyExceptionMsgHandler);
 
