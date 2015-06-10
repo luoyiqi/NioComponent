@@ -174,27 +174,31 @@ public class NioSockACRer extends Thread {
                                 switch (seed.channelType) {
                                     case NioTypes.TYPE_TCP_SERVER:
                                     case NioTypes.TYPE_TCP_CLIENT: {
+
+
                                         SocketChannel channel = (SocketChannel) key.channel();
-                                        int rs = channel.read(mBuffer);
 
-                                        nioSockEntity = mPool.obtain();
+                                        try {
+                                            int rs = channel.read(mBuffer);
 
-                                        if (nioSockEntity != null && nioSockEntity.handle != null) {
+                                            nioSockEntity = mPool.obtain();
 
-                                            if (nioSockEntity.handle instanceof NioSockEntity.INioSockEventHandler) {
-                                                // if (nioSockEntity.handle != null){
-                                                NioSockEntity.INioSockEventHandler handler = (NioSockEntity.INioSockEventHandler) nioSockEntity.handle;
+                                            if (nioSockEntity != null && nioSockEntity.handle != null) {
 
-                                                nioSockEntity.handle = seed.handle;//notify:change handler!!!
+                                                if (nioSockEntity.handle instanceof NioSockEntity.INioSockEventHandler) {
+                                                    // if (nioSockEntity.handle != null){
+                                                    NioSockEntity.INioSockEventHandler handler = (NioSockEntity.INioSockEventHandler) nioSockEntity.handle;
 
-                                                nioSockEntity.channelType = seed.channelType;
-                                                nioSockEntity.tcpChannel = channel;
-                                                nioSockEntity.decodeSocketAddress(channel);
+                                                    nioSockEntity.handle = seed.handle;//notify:change handler!!!
 
-                                                if (rs > 0) {
-                                                    mBuffer.flip();
+                                                    nioSockEntity.channelType = seed.channelType;
+                                                    nioSockEntity.tcpChannel = channel;
+                                                    nioSockEntity.decodeSocketAddress(channel);
 
-                                                    nioSockEntity.setBuffer(mBuffer);
+                                                    if (rs > 0) {
+                                                        mBuffer.flip();
+
+                                                        nioSockEntity.setBuffer(mBuffer);
 
 
                                                 /*
@@ -205,32 +209,41 @@ public class NioSockACRer extends Thread {
                                                 }
                                                 */
 
-                                                    handler.birthBuffer(nioSockEntity);
+                                                        handler.birthBuffer(nioSockEntity);
 
-                                                } else if (rs == 0) {
-                                                    //?
-                                                    mPool.recovery(nioSockEntity);
-                                                } else {
-                                                    //remote socket close.
+                                                    } else if (rs == 0) {
+                                                        //?
+                                                        mPool.recovery(nioSockEntity);
+                                                    } else {
+                                                        //remote socket close.
                                                 /*
                                                 if (handler != null) {
                                                     handler.deadSocket(nioSockEntity);
                                                 }
                                                 */
-                                                    handler.deadSocket(nioSockEntity);
+                                                        handler.deadSocket(nioSockEntity);
+                                                        mPool.recovery(nioSockEntity);
+                                                    }
+                                                } else {
+                                                    //instanceof fail
                                                     mPool.recovery(nioSockEntity);
                                                 }
-                                            } else {
-                                                //instanceof fail
-                                                mPool.recovery(nioSockEntity);
+
                                             }
-
-                                        }
                                     /*
                                     else {
                                         //pool empty
                                     }
                                     */
+
+
+                                        } catch (IOException ex) {
+                                            key.cancel();
+                                            channel.socket().close();
+                                            channel.close();
+
+                                            ex.printStackTrace();
+                                        }
 
 
                                         break;
@@ -239,40 +252,51 @@ public class NioSockACRer extends Thread {
                                     case NioTypes.TYPE_UDP_CLIENT: {
                                         DatagramChannel channel = (DatagramChannel) key.channel();
 
-                                        SocketAddress address = channel.receive(mBuffer);
-                                        if (mBuffer.hasRemaining()) {
+                                        try {
+
+                                            SocketAddress address = channel.receive(mBuffer);
+                                            if (mBuffer.hasRemaining()) {
 
 
-                                            nioSockEntity = mPool.obtain();
+                                                nioSockEntity = mPool.obtain();
 
-                                            if (nioSockEntity != null) {
-                                                NioSockEntity.INioSockEventHandler handler = (NioSockEntity.INioSockEventHandler) nioSockEntity.handle;
+                                                if (nioSockEntity != null) {
+                                                    NioSockEntity.INioSockEventHandler handler = (NioSockEntity.INioSockEventHandler) nioSockEntity.handle;
 
-                                                nioSockEntity.handle = seed.handle;//notify:change handler!!!
+                                                    nioSockEntity.handle = seed.handle;//notify:change handler!!!
 
-                                                nioSockEntity.channelType = seed.channelType;
-                                                nioSockEntity.udpChannel = channel;
-                                                nioSockEntity.bindPort = seed.bindPort;
-                                                nioSockEntity.host = ((InetSocketAddress) address).getAddress().getHostAddress();
-                                                nioSockEntity.port = ((InetSocketAddress) address).getPort();
-
-
-                                                mBuffer.flip();
+                                                    nioSockEntity.channelType = seed.channelType;
+                                                    nioSockEntity.udpChannel = channel;
+                                                    nioSockEntity.bindPort = seed.bindPort;
+                                                    nioSockEntity.host = ((InetSocketAddress) address).getAddress().getHostAddress();
+                                                    nioSockEntity.port = ((InetSocketAddress) address).getPort();
 
 
-                                                nioSockEntity.setBuffer(mBuffer);
+                                                    mBuffer.flip();
 
 
-                                                if (handler != null) {
-                                                    handler.birthBuffer(nioSockEntity);
+                                                    nioSockEntity.setBuffer(mBuffer);
+
+
+                                                    if (handler != null) {
+                                                        handler.birthBuffer(nioSockEntity);
+                                                    } else {
+                                                        mPool.recovery(nioSockEntity);
+                                                    }
+
                                                 } else {
-                                                    mPool.recovery(nioSockEntity);
+                                                    //pool empty
                                                 }
 
-                                            } else {
-                                                //pool empty
+
+                                                break;
                                             }
-                                            break;
+
+                                        } catch (IOException ex) {
+                                            key.cancel();
+                                            channel.socket().close();
+                                            channel.close();
+
                                         }
                                     }
                                 }
@@ -281,9 +305,9 @@ public class NioSockACRer extends Thread {
                                 key.channel().close();
                             }
 
+
                         }
-                    }catch (CancelledKeyException ex)
-                    {
+                    } catch (CancelledKeyException ex) {
                         ex.printStackTrace();
                         if (nioSockEntity != null)
                             mPool.recovery(nioSockEntity);
@@ -295,7 +319,7 @@ public class NioSockACRer extends Thread {
             }
 
 
-        }  catch (IOException ioe) {
+        } catch (IOException ioe) {
             if (nioSockEntity != null)
                 mPool.recovery(nioSockEntity);
 
